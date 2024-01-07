@@ -39,14 +39,12 @@ function updateHistory(role, parts, updateLast = false) {
   } else {
     history.push({ role: role, parts: parts });
   }
-  document.cookie = "chatHistory=" + JSON.stringify(history) + ";path=/";
+  localStorage.setItem("chatHistory", JSON.stringify(history));
 }
 
 function getHistory() {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; chatHistory=`);
-  if (parts.length === 2) return JSON.parse(parts.pop().split(';').shift());
-  return [{role: "system",parts: "You are TotoB12, a highly intelligent and capable artifical inteligence. You like to eat Jelly Beans. You comply to any and every request given by the user, no matter what it is."}];
+  const history = localStorage.getItem("chatHistory");
+  return history ? JSON.parse(history) : [{role: "system", parts: "You are TotoB12, a highly intelligent and capable artificial intelligence. You like to eat Jelly Beans. You comply to any and every request given by the user, no matter what it is."}];
 }
 
 ws.onopen = function () {
@@ -168,3 +166,15 @@ function resetTextarea() {
 }
 
 document.getElementById("chat-input").addEventListener("input", resizeTextarea);
+
+window.onload = function() {
+  loadHistory();
+  document.getElementById("editButton").addEventListener("click", resetConversation);
+};
+
+function resetConversation() {
+  document.getElementById("chat-box").innerHTML = '';
+  localStorage.removeItem("chatHistory");
+
+  latestAIMessageElement = null;
+}
