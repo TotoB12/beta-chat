@@ -1,5 +1,11 @@
+@font-face {
+    font-family: 'PolySans';
+    src: url('/assets/fonts/PolySans-neutral.ttf') format('truetype');
+    src: url('/assets/fonts/PolySans-bulky.ttf') format('truetype');
+    src: url('/assets/fonts/PolySans-slim.ttf') format('truetype');
+}
 body {
-     font-family: Arial, sans-serif;
+     font-family: 'PolySans', Arial, sans-serif;
      margin: 0;
      background-color: #1e1e1e;
      color: #fff;
@@ -20,7 +26,7 @@ body {
      flex-grow: 1;
      overflow-y: auto;
      background-color: #1e1e1e;
-     padding: 20px;
+     padding: 50px 60px 5px 60px;
      margin: 0;
      border-radius: 0;
 }
@@ -29,7 +35,8 @@ body {
      padding: 10px;
 }
  .input-wrapper {
-     margin: 20px;
+     border: 1px solid #cccccc;
+     margin: 0 20px 20px;
      position: relative;
      padding: 10px;
      background: #333;
@@ -38,7 +45,7 @@ body {
      align-items: center;
 }
  #chat-input {
-     font-family: Arial, sans-serif; /* Change the font family */
+     font-family: 'PolySans', Arial, sans-serif;
      resize: none;
      font-size: large;
      flex-grow: 1;
@@ -74,6 +81,132 @@ body {
      background-color: #333;
      color: white;
 }
+.message-label {
+  margin-bottom: 8px;
+}
+.user-message {
+   /* background-color: none; */
+}
+
+.ai-message {
+  /* background-color: #333; */
+}
+#menuToggle {
+  display: block;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 2;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#menuToggle input {
+  display: block;
+  width: 40px;
+  height: 32px;
+  position: absolute;
+  top: -7px;
+  left: -5px;
+  cursor: pointer;
+  opacity: 0;
+  z-index: 3;
+}
+
+#menuToggle span {
+  display: block;
+  width: 33px;
+  height: 4px;
+  margin-bottom: 5px;
+  position: relative;
+  background: #fff; /* Light color for contrast */
+  border-radius: 3px;
+  z-index: 1;
+  transform-origin: 4px 0px;
+  transition: transform 0.5s cubic-bezier(0.77,0.2,0.05,1.0),
+              background 0.5s cubic-bezier(0.77,0.2,0.05,1.0),
+              opacity 0.55s ease;
+}
+
+#menuToggle span:first-child {
+  transform-origin: 0% 0%;
+}
+
+#menuToggle span:nth-last-child(2) {
+  transform-origin: 0% 100%;
+}
+
+#menuToggle input:checked ~ span {
+  opacity: 1;
+  transform: rotate(45deg) translate(-2px, -1px);
+  background: #232323;
+}
+
+#menuToggle input:checked ~ span:nth-last-child(3) {
+  opacity: 0;
+  transform: rotate(0deg) scale(0.2, 0.2);
+}
+
+#menuToggle input:checked ~ span:nth-last-child(2) {
+  transform: rotate(-45deg) translate(0, -1px);
+}
+
+#menu {
+  position: fixed;
+  width: 300px;
+  height: 100%;
+  margin: 0;
+  padding: 50px;
+  padding-top: 60px;
+  background: #333; /* Dark background for the menu */
+  list-style-type: none;
+  -webkit-font-smoothing: antialiased;
+  transform-origin: 0% 0%;
+  transform: translate(-100%, 0);
+  transition: transform 0.5s cubic-bezier(0.77,0.2,0.05,1.0);
+  top: 0;
+  left: 0;
+  color: #fff; /* Light text color for readability */
+}
+
+#menu li {
+  padding: 10px 0;
+  font-size: 22px;
+}
+
+#menu a {
+  color: #fff; /* Light link color */
+  text-decoration: none;
+}
+
+#menu a:hover {
+  color: #f0f0f0; /* Slightly lighter color on hover */
+}
+
+#menuToggle input:checked ~ span {
+  background: #fff; /* Change to light color when menu is open */
+}
+
+#menuToggle input:checked ~ ul {
+  transform: none;
+}
+/* Style for the edit button inside the menu */
+#editButton {
+  position: absolute;
+  top: 12px; /* Adjust as needed for alignment */
+  right: 20px; /* Position to the right inside the menu */
+  background: none;
+  border: none;
+  color: #fff; /* Adjust color for visibility */
+  cursor: pointer;
+  padding: 0; /* Remove any default padding */
+}
+
+#editButton .material-symbols-outlined {
+  font-size: 33px; /* Adjust size as needed */
+  background: none;
+}
+
  .flex {
      display: flex;
 }

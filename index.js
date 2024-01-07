@@ -42,6 +42,8 @@ wss.on("connection", function connection(ws) {
       for await (const chunk of result.stream) {
         ws.send(chunk.text());
       }
+
+      ws.send(JSON.stringify({ type: "AI_COMPLETE", uniqueIdentifier: "7777" }));
     } catch (error) {
       console.error(error);
       ws.send("Error: Unable to process the request.");
