@@ -28,13 +28,33 @@ function loadHistory() {
       div.innerHTML = marked.parse(entry.parts);
       chatBox.appendChild(div);
     } else if (entry.role === "system") {
-      // Handle system message if needed
+      // system message if needed
     }
   });
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-window.onload = loadHistory;
+function updateCharacterCount() {
+  const charCount = inputField.value.length;
+  const charCountElement = document.getElementById("char-count");
+  charCountElement.innerHTML = `${charCount}<br><hr>3000`;
+
+  const hrElement = charCountElement.querySelector("hr");
+  if (charCount >= 3000) {
+    charCountElement.style.color = "red";
+    hrElement.style.borderColor = "red";
+    inputField.value = inputField.value.substring(0, 3000);
+  } else {
+    charCountElement.style.color = "white";
+    hrElement.style.borderColor = "white";
+  }
+
+  if (charCount > 100) {
+    charCountElement.style.display = "block";
+  } else {
+    charCountElement.style.display = "none";
+  }
+}
 
 function updateHistory(role, parts, updateLast = false) {
   let history = getHistory();
@@ -69,11 +89,19 @@ function updateConnectionStatus(status) {
       "Status: 🟢 Online";
   } else if (status === "offline") {
     document.getElementById("connection-status").innerHTML =
-      "Status: 🔴 Offline Please Refresh";
+      "Status: 🔴 Offline, Please Refresh";
   } else {
     document.getElementById("connection-status").innerHTML =
-      "Status: 🔴 Error Please Refresh";
+      "Status: 🔴 Error, Please Refresh";
   }
+}
+
+function simulateButtonHover() {
+  const sendButton = document.getElementById("send-button");
+  sendButton.classList.add("hover-effect");
+  setTimeout(() => {
+    sendButton.classList.remove("hover-effect");
+  }, 150);
 }
 
 ws.onopen = function () {
@@ -82,8 +110,10 @@ ws.onopen = function () {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       sendMessage();
+      simulateButtonHover();
     }
   });
+
   updateConnectionStatus("online");
 };
 
@@ -151,6 +181,10 @@ function processAIResponse(message) {
 
 function sendMessage() {
   const userText = inputField.value.trim();
+  if (userText.length > 3000) {
+    alert("Character limit exceeded. Please shorten your message.");
+    return;
+  }
   if (userText === "" || isAIResponding) return;
   let history = getHistory();
   const historyJsonString = JSON.stringify(history);
@@ -206,6 +240,7 @@ function resizeTextarea() {
     textarea.style.height = "184px";
     textarea.style.overflowY = "auto";
   }
+  updateCharacterCount();
 }
 
 function resetTextarea() {
@@ -214,10 +249,12 @@ function resetTextarea() {
   textarea.style.overflowY = "hidden";
 }
 
-document.getElementById("chat-input").addEventListener("input", resizeTextarea);
+inputField.addEventListener("input", resizeTextarea);
+inputField.addEventListener("input", updateCharacterCount);
 
 window.onload = function () {
   loadHistory();
+  updateCharacterCount();
 };
 
 function resetConversation() {
@@ -227,11 +264,11 @@ function resetConversation() {
   latestAIMessageElement = null;
 }
 
-newChatButton.addEventListener("click", function() {
-    resetConversation();
+newChatButton.addEventListener("click", function () {
+  resetConversation();
 
-    var menuToggleCheckbox = document.querySelector("#menuToggle input");
-    if (menuToggleCheckbox.checked) {
-        menuToggleCheckbox.click();
-    }
+  var menuToggleCheckbox = document.querySelector("#menuToggle input");
+  if (menuToggleCheckbox.checked) {
+    menuToggleCheckbox.click();
+  }
 });
