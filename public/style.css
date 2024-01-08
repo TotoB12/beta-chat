@@ -259,7 +259,7 @@ body {
 #char-count {
     position: absolute;
     bottom: 60px;
-    right: 24px;
+    right: 15px;
     background-color: transparent;
     color: white;
     display: none;
