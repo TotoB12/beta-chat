@@ -6,7 +6,10 @@
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
     <title>TotoB12 Chat</title>
     <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
   </head>
   <body>
     <nav role="navigation">
@@ -16,23 +19,40 @@
         <span></span>
         <span></span>
         <ul id="menu">
-          <button id="editButton">
-            <span class="material-symbols-outlined">
-            edit_square
-            </span>
+          <button id="newChatButton">
+            <span class="material-symbols-outlined"> edit_square </span>
           </button>
-          <a href="#"><li>Home</li></a>
-          <a href="#"><li>About</li></a>
-          <a href="#"><li>Info</li></a>
-          <a href="#"><li>Contact</li></a>
+          <a href="#"><li>HAAAA</li></a>
+          <a href="#"><li>HAAA</li></a>
+          <a href="#"><li>HAAAA</li></a>
+          <a href="#"><li>HAAA</li></a>
         </ul>
       </div>
     </nav>
     <div id="chat-container">
+      <span id="connection-status" class="connection-status"
+        >Status: 🟡 Connecting</span
+      >
       <div id="chat-box"></div>
       <div class="input-wrapper">
         <textarea id="chat-input" placeholder="Type your message..."></textarea>
-        <button id="send-button">Send</button>
+        <button id="send-button">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            class="text-white dark:text-black"
+          >
+            <path
+              d="M7 11L12 6L17 11M12 18V7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+          </svg>
+        </button>
       </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>

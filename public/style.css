@@ -26,8 +26,8 @@ body {
      flex-grow: 1;
      overflow-y: auto;
      background-color: #1e1e1e;
-     padding: 50px 60px 5px 60px;
-     margin: 0;
+     padding: 0px 60px 5px 60px;
+     margin-top:62px;
      border-radius: 0;
 }
  .input-area {
@@ -60,18 +60,21 @@ body {
      overflow-y: hidden;
      outline: none;
 }
- #send-button {
-     background: #444;
-     color: white;
-     padding: 10px 20px;
-     border: none;
-     border-radius: 22px;
-     cursor: pointer;
-     outline: none;
-     height: 44px;
+#send-button {
+    background: white;
+    color: black; /* This will set the text color, which is also used as the SVG color due to 'currentColor' */
+    padding: 10px 20px;
+    border: none;
+    border-radius: 22px;
+    cursor: pointer;
+    outline: none;
+    height: 44px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
- #send-button:hover {
-     background-color: #555;
+#send-button:hover {
+    background-color: #f0f0f0; /* Slightly different shade for hover effect */
 }
  .message {
      padding: 10px;
@@ -119,7 +122,7 @@ body {
   height: 4px;
   margin-bottom: 5px;
   position: relative;
-  background: #fff; /* Light color for contrast */
+  background: #fff;
   border-radius: 3px;
   z-index: 1;
   transform-origin: 4px 0px;
@@ -191,7 +194,7 @@ body {
   transform: none;
 }
 /* Style for the edit button inside the menu */
-#editButton {
+#newChatButton {
   position: absolute;
   top: 12px; /* Adjust as needed for alignment */
   right: 20px; /* Position to the right inside the menu */
@@ -202,11 +205,21 @@ body {
   padding: 0; /* Remove any default padding */
 }
 
-#editButton .material-symbols-outlined {
+#newChatButton .material-symbols-outlined {
   font-size: 33px; /* Adjust size as needed */
   background: none;
 }
-
+.connection-status {
+    text-align: right;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #fff;
+    background-color: rgba(0,0,0,0.5); /* Optional: for better visibility */
+    padding: 5px;
+    border-radius: 5px;
+    font-size: 0.8em; /* Adjust size as needed */
+}
  .flex {
      display: flex;
 }
