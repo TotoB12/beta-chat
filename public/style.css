@@ -44,7 +44,7 @@ body {
     overflow-y: auto;
     background-color: #1e1e1e;
     padding: 0px 60px 5px 60px;
-    margin-top: 62px;
+    /* margin-top: 62px; */
     border-radius: 0;
 }
 
@@ -244,13 +244,20 @@ body {
     background: none;
 }
 
-.connection-status {
-    text-align: right;
+/* Container for Status and Ping */
+#status-container {
+    display: flex;
+    align-items: center;
     position: absolute;
     top: 10px;
     right: 10px;
+    gap: 10px; /* Adjust as needed */
+}
+
+/* Shared style for both Status and Ping */
+.connection-status, .ping-status {
     color: #fff;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.9);
     padding: 5px;
     border-radius: 5px;
     font-size: 0.8em;

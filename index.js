@@ -34,6 +34,10 @@ wss.on("connection", function connection(ws) {
   ws.on("message", async function incoming(messageBuffer) {
     try {
       const message = messageBuffer.toString();
+      if (message === '{"type":"ping"}') {
+        ws.send(JSON.stringify({ type: "pong" }));
+        return;
+      }
       console.log(message);
 
       const model = genAI.getGenerativeModel({ model: "gemini-pro", safetySettings });

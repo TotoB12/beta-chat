@@ -30,9 +30,10 @@
       </div>
     </nav>
     <div id="chat-container">
-      <span id="connection-status" class="connection-status"
-        >Status: 🟡 Connecting</span
-      >
+      <div id="status-container">
+          <span id="connection-status" class="connection-status">Status: 🟡 Connecting</span>
+          <span id="ping-status" class="ping-status">Ping: -- ms</span>
+      </div>
       <div id="chat-box"></div>
       <div class="input-wrapper">
         <textarea id="chat-input" placeholder="Type your message..."></textarea>

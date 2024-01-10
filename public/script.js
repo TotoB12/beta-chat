@@ -5,6 +5,14 @@ const newChatButton = document.getElementById("newChatButton");
 var buffer;
 let latestAIMessageElement = null;
 let isAIResponding = false;
+let lastPingTimestamp;
+
+function sendPing() {
+  lastPingTimestamp = Date.now();
+  ws.send(JSON.stringify({ type: "ping" }));
+}
+
+
 
 const ws = new WebSocket(`wss://${window.location.host}`);
 
@@ -38,7 +46,9 @@ function loadHistory() {
 function updateCharacterCount() {
   const charCount = inputField.value.length;
   const charCountElement = document.getElementById("char-count");
-  charCountElement.innerHTML = `${charCount.toLocaleString().replace(",", " ")}<br><hr>60 000`;
+  charCountElement.innerHTML = `${charCount
+    .toLocaleString()
+    .replace(",", " ")}<br><hr>60 000`;
 
   const hrElement = charCountElement.querySelector("hr");
   if (charCount >= 60000) {
@@ -130,6 +140,11 @@ ws.onmessage = function (event) {
   try {
     const data = JSON.parse(event.data);
 
+    if (data.type === "pong") {
+      const latency = Date.now() - lastPingTimestamp;
+      updatePingDisplay(latency);
+    }
+
     if (data.type === "AI_COMPLETE" && data.uniqueIdentifier === "7777") {
       if (
         latestAIMessageElement &&
@@ -145,9 +160,15 @@ ws.onmessage = function (event) {
   }
 };
 
+function updatePingDisplay(latency) {
+  document.getElementById("ping-status").innerHTML = `Ping: ${latency} ms`;
+}
+
 function checkNetworkStatus() {
   if (navigator.onLine) {
-    if (ws.readyState !== WebSocket.OPEN) {
+    if (ws.readyState === WebSocket.OPEN) {
+      sendPing();
+    } else {
       updateConnectionStatus("offline");
     }
   } else {
@@ -191,7 +212,11 @@ function sendMessage() {
   let history = getHistory();
   const historyJsonString = JSON.stringify(history);
   const messageToSend =
-    "History:\n\n" + historyJsonString + "\n\nPrompt:" + userText + "\n\nTotoB12:";
+    "History:\n\n" +
+    historyJsonString +
+    "\n\nPrompt:" +
+    userText +
+    "\n\nTotoB12:";
   updateHistory("user", userText);
 
   const userLabel = document.createElement("div");
@@ -233,84 +258,85 @@ function handleEnterKeyPress(event) {
 
 function countLines(textarea) {
   if (!buffer) {
-      buffer = document.createElement('textarea');
-      buffer.style.border = 'none';
-      buffer.style.height = '0';
-      buffer.style.overflow = 'hidden';
-      buffer.style.padding = '0';
-      buffer.style.position = 'absolute';
-      buffer.style.left = '0';
-      buffer.style.top = '0';
-      buffer.style.zIndex = '-1';
-      document.body.appendChild(buffer);
+    buffer = document.createElement("textarea");
+    buffer.style.border = "none";
+    buffer.style.height = "0";
+    buffer.style.overflow = "hidden";
+    buffer.style.padding = "0";
+    buffer.style.position = "absolute";
+    buffer.style.left = "0";
+    buffer.style.top = "0";
+    buffer.style.zIndex = "-1";
+    document.body.appendChild(buffer);
   }
-  
-    var cs = window.getComputedStyle(textarea);
-    var paddingLeft = parseInt(cs.paddingLeft, 10);
-    var paddingRight = parseInt(cs.paddingRight, 10);
-    var lineHeight = parseInt(cs.lineHeight, 10);
 
-    if (isNaN(lineHeight)) lineHeight = parseInt(cs.fontSize, 10);
+  var cs = window.getComputedStyle(textarea);
+  var paddingLeft = parseInt(cs.paddingLeft, 10);
+  var paddingRight = parseInt(cs.paddingRight, 10);
+  var lineHeight = parseInt(cs.lineHeight, 10);
 
-    buffer.style.width = (textarea.clientWidth - paddingLeft - paddingRight) + 'px';
+  if (isNaN(lineHeight)) lineHeight = parseInt(cs.fontSize, 10);
 
-    buffer.style.font = cs.font;
-    buffer.style.letterSpacing = cs.letterSpacing;
-    buffer.style.whiteSpace = cs.whiteSpace;
-    buffer.style.wordBreak = cs.wordBreak;
-    buffer.style.wordSpacing = cs.wordSpacing;
-    buffer.style.wordWrap = cs.wordWrap;
+  buffer.style.width = textarea.clientWidth - paddingLeft - paddingRight + "px";
 
-    buffer.value = textarea.value;
+  buffer.style.font = cs.font;
+  buffer.style.letterSpacing = cs.letterSpacing;
+  buffer.style.whiteSpace = cs.whiteSpace;
+  buffer.style.wordBreak = cs.wordBreak;
+  buffer.style.wordSpacing = cs.wordSpacing;
+  buffer.style.wordWrap = cs.wordWrap;
 
-    const scrollHeight = buffer.scrollHeight;
-    const tolerance = -7;
+  buffer.value = textarea.value;
 
-    let lineCount = Math.floor((scrollHeight + tolerance) / lineHeight);
-    return lineCount <= 0 ? 1 : lineCount;
+  const scrollHeight = buffer.scrollHeight;
+  const tolerance = -7;
+
+  let lineCount = Math.floor((scrollHeight + tolerance) / lineHeight);
+  return lineCount <= 0 ? 1 : lineCount;
 }
-function resizeTextarea() {
-    const textarea = document.getElementById("chat-input");
-    const numberOfLines = countLines(textarea);
-  console.log(numberOfLines);
-    const lineHeight = 22;
-    const maxTextAreaHeight = 184;
-    const defaultHeight = 22;
 
-    let newHeight;
-    if (numberOfLines <= 1) {
-        newHeight = defaultHeight;
+function resizeTextarea() {
+  const textarea = document.getElementById("chat-input");
+  const numberOfLines = countLines(textarea);
+  console.log(numberOfLines);
+  const lineHeight = 22;
+  const maxTextAreaHeight = 184;
+  const defaultHeight = 22;
+
+  let newHeight;
+  if (numberOfLines <= 1) {
+    newHeight = defaultHeight;
+  } else {
+    newHeight = numberOfLines * lineHeight;
+    if (newHeight > maxTextAreaHeight) {
+      newHeight = maxTextAreaHeight;
+      textarea.style.overflowY = "auto";
     } else {
-        newHeight = numberOfLines * lineHeight;
-        if (newHeight > maxTextAreaHeight) {
-            newHeight = maxTextAreaHeight;
-            textarea.style.overflowY = "auto";
-        } else {
-            textarea.style.overflowY = "hidden";
-        }
+      textarea.style.overflowY = "hidden";
     }
+  }
   console.log(newHeight);
 
-    textarea.style.height = newHeight + "px";
-    updateCharacterCount();
+  textarea.style.height = newHeight + "px";
+  updateCharacterCount();
 }
 
 function throttle(func, limit) {
-    let inThrottle;
-    return function() {
-        const args = arguments;
-        const context = this;
-        if (!inThrottle) {
-            func.apply(context, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    };
+  let inThrottle;
+  return function () {
+    const args = arguments;
+    const context = this;
+    if (!inThrottle) {
+      func.apply(context, args);
+      inThrottle = true;
+      setTimeout(() => (inThrottle = false), limit);
+    }
+  };
 }
 
-window.onresize = throttle(function() {
-    resizeTextarea();
-}, 100); 
+window.onresize = throttle(function () {
+  resizeTextarea();
+}, 100);
 
 function resetTextarea() {
   const textarea = document.getElementById("chat-input");
