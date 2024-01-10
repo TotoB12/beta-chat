@@ -2,6 +2,7 @@ const chatBox = document.getElementById("chat-box");
 const inputField = document.getElementById("chat-input");
 const sendButton = document.getElementById("send-button");
 const newChatButton = document.getElementById("newChatButton");
+var buffer;
 let latestAIMessageElement = null;
 let isAIResponding = false;
 
@@ -37,13 +38,13 @@ function loadHistory() {
 function updateCharacterCount() {
   const charCount = inputField.value.length;
   const charCountElement = document.getElementById("char-count");
-  charCountElement.innerHTML = `${charCount.toLocaleString().replace(",", " ")}<br><hr>112 000`;
+  charCountElement.innerHTML = `${charCount.toLocaleString().replace(",", " ")}<br><hr>60 000`;
 
   const hrElement = charCountElement.querySelector("hr");
-  if (charCount >= 112000) {
+  if (charCount >= 60000) {
     charCountElement.style.color = "red";
     hrElement.style.borderColor = "red";
-    inputField.value = inputField.value.substring(0, 112000);
+    inputField.value = inputField.value.substring(0, 60000);
   } else {
     charCountElement.style.color = "white";
     hrElement.style.borderColor = "white";
@@ -181,7 +182,7 @@ function processAIResponse(message) {
 
 function sendMessage() {
   const userText = inputField.value.trim();
-  if (userText.length > 112000) {
+  if (userText.length > 60000) {
     alert("Character limit exceeded. Please shorten your message.");
     return;
   }
@@ -230,19 +231,86 @@ function handleEnterKeyPress(event) {
   }
 }
 
-function resizeTextarea() {
-  const textarea = document.getElementById("chat-input");
-  const numberOfLineBreaks = (textarea.value.match(/\n/g) || []).length;
-  const newHeight = 22 + numberOfLineBreaks * 22; // 22 is the line height, adjust if different
-  if (newHeight < 184) {
-    // 176 is the max height for 8 lines
-    textarea.style.height = newHeight + "px";
-  } else {
-    textarea.style.height = "184px";
-    textarea.style.overflowY = "auto";
+function countLines(textarea) {
+  if (!buffer) {
+      buffer = document.createElement('textarea');
+      buffer.style.border = 'none';
+      buffer.style.height = '0';
+      buffer.style.overflow = 'hidden';
+      buffer.style.padding = '0';
+      buffer.style.position = 'absolute';
+      buffer.style.left = '0';
+      buffer.style.top = '0';
+      buffer.style.zIndex = '-1';
+      document.body.appendChild(buffer);
   }
-  updateCharacterCount();
+  
+    var cs = window.getComputedStyle(textarea);
+    var paddingLeft = parseInt(cs.paddingLeft, 10);
+    var paddingRight = parseInt(cs.paddingRight, 10);
+    var lineHeight = parseInt(cs.lineHeight, 10);
+
+    if (isNaN(lineHeight)) lineHeight = parseInt(cs.fontSize, 10);
+
+    buffer.style.width = (textarea.clientWidth - paddingLeft - paddingRight) + 'px';
+
+    buffer.style.font = cs.font;
+    buffer.style.letterSpacing = cs.letterSpacing;
+    buffer.style.whiteSpace = cs.whiteSpace;
+    buffer.style.wordBreak = cs.wordBreak;
+    buffer.style.wordSpacing = cs.wordSpacing;
+    buffer.style.wordWrap = cs.wordWrap;
+
+    buffer.value = textarea.value;
+
+    const scrollHeight = buffer.scrollHeight;
+    const tolerance = -7;
+
+    let lineCount = Math.floor((scrollHeight + tolerance) / lineHeight);
+    return lineCount <= 0 ? 1 : lineCount;
 }
+function resizeTextarea() {
+    const textarea = document.getElementById("chat-input");
+    const numberOfLines = countLines(textarea);
+  console.log(numberOfLines);
+    const lineHeight = 22;
+    const maxTextAreaHeight = 184;
+    const defaultHeight = 22;
+
+    let newHeight;
+    if (numberOfLines <= 1) {
+        newHeight = defaultHeight;
+    } else {
+        newHeight = numberOfLines * lineHeight;
+        if (newHeight > maxTextAreaHeight) {
+            newHeight = maxTextAreaHeight;
+            textarea.style.overflowY = "auto";
+        } else {
+            textarea.style.overflowY = "hidden";
+        }
+    }
+  console.log(newHeight);
+
+    textarea.style.height = newHeight + "px";
+    updateCharacterCount();
+}
+
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+window.onresize = throttle(function() {
+    resizeTextarea();
+}, 100); 
 
 function resetTextarea() {
   const textarea = document.getElementById("chat-input");
