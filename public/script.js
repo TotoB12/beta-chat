@@ -2,6 +2,7 @@ const chatBox = document.getElementById("chat-box");
 const inputField = document.getElementById("chat-input");
 const sendButton = document.getElementById("send-button");
 const newChatButton = document.getElementById("newChatButton");
+const expanderButton = document.getElementById('expander-button');
 var buffer;
 let latestAIMessageElement = null;
 let isAIResponding = false;
@@ -296,30 +297,81 @@ function countLines(textarea) {
 }
 
 function resizeTextarea() {
-  const textarea = document.getElementById("chat-input");
-  const numberOfLines = countLines(textarea);
-  console.log(numberOfLines);
-  const lineHeight = 22;
-  const maxTextAreaHeight = 184;
-  const defaultHeight = 22;
+    const textarea = document.getElementById("chat-input");
+    if (!textarea.classList.contains('expanded')) {
+        const numberOfLines = countLines(textarea);
+        const lineHeight = 22;
+        const maxTextAreaHeight = 184;
 
-  let newHeight;
-  if (numberOfLines <= 1) {
-    newHeight = defaultHeight;
-  } else {
-    newHeight = numberOfLines * lineHeight;
-    if (newHeight > maxTextAreaHeight) {
-      newHeight = maxTextAreaHeight;
-      textarea.style.overflowY = "auto";
-    } else {
-      textarea.style.overflowY = "hidden";
+        let newHeight;
+        if (numberOfLines <= 1) {
+            newHeight = lineHeight;
+        } else {
+            newHeight = numberOfLines * lineHeight;
+            if (newHeight > maxTextAreaHeight) {
+                newHeight = maxTextAreaHeight;
+                textarea.style.overflowY = "auto";
+            } else {
+                textarea.style.overflowY = "hidden";
+            }
+        }
+
+        textarea.style.height = newHeight + "px";
     }
-  }
-  console.log(newHeight);
 
-  textarea.style.height = newHeight + "px";
-  updateCharacterCount();
+    updateCharacterCount();
+    toggleExpanderButtonVisibility(textarea);
+
+    if (isCursorOnLastLine(textarea)) {
+        scrollToBottomOfTextarea();
+    }
 }
+
+function isCursorOnLastLine(textarea) {
+    const cursorPosition = textarea.selectionStart;
+    const textUpToCursor = textarea.value.substring(0, cursorPosition);
+    const linesUpToCursor = textUpToCursor.split("\n").length;
+    const totalLines = textarea.value.split("\n").length;
+
+    return linesUpToCursor === totalLines;
+}
+
+
+function toggleExpanderButtonVisibility(textarea) {
+    const expanderButton = document.getElementById('expander-button');
+    if (textarea.classList.contains('expanded')) {
+        expanderButton.style.display = 'flex';
+    } else {
+        if (textarea.scrollHeight > textarea.clientHeight) {
+            expanderButton.style.display = 'flex';
+        } else {
+            expanderButton.style.display = 'none';
+        }
+    }
+}
+
+
+function toggleTextareaExpansion() {
+    const textarea = document.getElementById('chat-input');
+    const expanderButton = document.getElementById('expander-button');
+    if (textarea.classList.contains('expanded')) {
+        textarea.style.height = '184px';
+        textarea.classList.remove('expanded');
+        expanderButton.textContent = 'expand_less';
+    } else {
+        textarea.style.height = '80vh';
+        textarea.classList.add('expanded');
+        expanderButton.textContent = 'expand_more';
+    }
+  scrollToBottomOfTextarea();
+}
+
+function scrollToBottomOfTextarea() {
+    const textarea = document.getElementById("chat-input");
+    textarea.scrollTop = textarea.scrollHeight;
+}
+
+document.getElementById('expander-button').addEventListener('click', toggleTextareaExpansion);
 
 function throttle(func, limit) {
   let inThrottle;

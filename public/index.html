@@ -31,30 +31,37 @@
     </nav>
     <div id="chat-container">
       <div id="status-container">
-          <span id="connection-status" class="connection-status">Status: 🟡 Connecting</span>
-          <span id="ping-status" class="ping-status">Ping: -- ms</span>
+        <span id="connection-status" class="connection-status"
+          >Status: 🟡 Connecting</span
+        >
+        <span id="ping-status" class="ping-status">Ping: -- ms</span>
       </div>
       <div id="chat-box"></div>
-      <div class="input-wrapper">
-        <textarea id="chat-input" placeholder="Type your message..."></textarea>
-        <span id="char-count">0 / 60 000</span>
-        <button id="send-button">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            class="text-white dark:text-black"
-          >
-            <path
-              d="M7 11L12 6L17 11M12 18V7"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></path>
-          </svg>
-        </button>
+          <div class="input-wrapper">
+            <textarea id="chat-input" placeholder="Type your message..."></textarea>
+            <div class="button-counter-wrapper">
+                <span id="char-count">0 / 60 000</span>
+                <button id="expander-button" class="material-symbols-outlined">
+                    expand_less
+                </button>
+          <button id="send-button">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              class="text-white dark:text-black"
+            >
+              <path
+                d="M7 11L12 6L17 11M12 18V7"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              ></path>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
