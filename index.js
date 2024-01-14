@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const http = require("http");
 const fetch = require("node-fetch");
 const WebSocket = require("ws");
@@ -34,6 +35,10 @@ const safetySettings = [
 
 app.use(bodyParser.json());
 app.use(express.static("public"));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 wss.on("connection", function connection(ws) {
   ws.on("message", async function incoming(messageBuffer) {
