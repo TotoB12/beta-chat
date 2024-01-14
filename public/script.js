@@ -8,6 +8,7 @@ let latestAIMessageElement = null;
 let uploadedImageUrl = null;
 let isAIResponding = false;
 let lastPingTimestamp;
+let currentUploadXHR = null; // Global reference to the current upload XHR
 
 function sendPing() {
   lastPingTimestamp = Date.now();
@@ -27,7 +28,10 @@ function loadHistory() {
     if (entry.role === "user") {
       label.textContent = "You";
       chatBox.appendChild(label);
-      chatBox.innerHTML += `<div class="message user-message">${entry.parts.replace(/\n/g, "<br>")}</div>`;
+      chatBox.innerHTML += `<div class="message user-message">${entry.parts.replace(
+        /\n/g,
+        "<br>",
+      )}</div>`;
 
       if (entry.imageUrl) {
         displayImage(entry.imageUrl);
@@ -52,7 +56,9 @@ function updateCharacterCount() {
 
   const charLimit = uploadedImageUrl ? 24000 : 60000;
 
-  charCountElement.innerHTML = `${charCount.toLocaleString().replace(",", " ")}<br><hr>${charLimit.toLocaleString().replace(",", " ")}`;
+  charCountElement.innerHTML = `${charCount
+    .toLocaleString()
+    .replace(",", " ")}<br><hr>${charLimit.toLocaleString().replace(",", " ")}`;
 
   const hrElement = charCountElement.querySelector("hr");
   if (charCount > charLimit) {
@@ -277,8 +283,8 @@ function sendMessage() {
 }
 
 function displayImage(imageUrl) {
-  const smallThumbnailUrl = imageUrl.replace(/(\.[\w\d_-]+)$/i, 't$1');
-  const largeThumbnailUrl = imageUrl.replace(/(\.[\w\d_-]+)$/i, 'l$1');
+  const smallThumbnailUrl = imageUrl.replace(/(\.[\w\d_-]+)$/i, "t$1");
+  const largeThumbnailUrl = imageUrl.replace(/(\.[\w\d_-]+)$/i, "l$1");
 
   const imageElement = document.createElement("img");
   imageElement.src = smallThumbnailUrl;
@@ -288,20 +294,20 @@ function displayImage(imageUrl) {
     imageElement.src = largeThumbnailUrl;
   };
 
-  imageElement.addEventListener('click', () => {
-    const modal = document.getElementById('image-modal');
-    const fullImage = document.getElementById('fullscreen-image');
+  imageElement.addEventListener("click", () => {
+    const modal = document.getElementById("image-modal");
+    const fullImage = document.getElementById("fullscreen-image");
     fullImage.src = imageUrl;
-    modal.classList.add('show-modal');
+    modal.classList.add("show-modal");
   });
 
   chatBox.appendChild(imageElement);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-document.getElementById('image-modal').addEventListener('click', function(e) {
+document.getElementById("image-modal").addEventListener("click", function (e) {
   if (e.target !== this) return;
-  this.classList.remove('show-modal');
+  this.classList.remove("show-modal");
 });
 
 function disableUserInput() {
@@ -493,6 +499,7 @@ function upload(file) {
       "Invalid file format. Please select an image.",
       "error",
     );
+    resetUploadButton();
     return;
   }
 
@@ -502,6 +509,7 @@ function upload(file) {
       "File size exceeds 3MB. Please select a smaller image.",
       "error",
     );
+    resetUploadButton();
     return;
   }
 
@@ -509,65 +517,88 @@ function upload(file) {
 
   var fd = new FormData();
   fd.append("image", file);
-  var xhr = new XMLHttpRequest();
-  xhr.open("POST", "https://api.imgur.com/3/image.json");
+  currentUploadXHR = new XMLHttpRequest();
+  currentUploadXHR.open("POST", "https://api.imgur.com/3/image.json");
 
-  xhr.onload = function () {
+  currentUploadXHR.onload = function () {
     try {
-      var response = JSON.parse(xhr.responseText);
+      var response = JSON.parse(currentUploadXHR.responseText);
       if (response.success) {
+        document.querySelector(".loading-indicator").style.display = "none";
+        document.getElementById("image-preview").classList.remove("dimmed");
         uploadedImageUrl = response.data.link;
         displayNotification(
           "Upload successful. Image URL: " + response.data.link,
           "success",
         );
-        const smallThumbnailUrl = uploadedImageUrl.replace(/(\.[\w\d_-]+)$/i, 's$1');
+        const smallThumbnailUrl = uploadedImageUrl.replace(
+          /(\.[\w\d_-]+)$/i,
+          "s$1",
+        );
         updateUploadButtonWithImage(smallThumbnailUrl);
       } else {
         displayNotification("Upload failed. " + response.data.error, "error");
         console.log(response.data.error);
+        resetUploadButton();
       }
     } catch (e) {
       displayNotification("An error occurred during upload.", "error");
       console.log(e);
+      resetUploadButton();
     }
+    currentUploadXHR = null;
   };
 
-  xhr.onerror = function () {
+  currentUploadXHR.onerror = function () {
     displayNotification("An error occurred during upload.", "error");
-    console.log(xhr.statusText);
+    console.log(currentUploadXHR.statusText);
+    resetUploadButton();
+    currentUploadXHR = null;
   };
 
-  xhr.setRequestHeader("Authorization", "Client-ID 6a8a51f3d7933e1");
-  xhr.send(fd);
+  // Handle the abort event
+  currentUploadXHR.onabort = function () {
+    displayNotification("Upload canceled.", "info");
+    resetUploadButton();
+    currentUploadXHR = null;
+  };
+
+  currentUploadXHR.setRequestHeader(
+    "Authorization",
+    "Client-ID 6a8a51f3d7933e1",
+  );
+  currentUploadXHR.send(fd);
 }
 
 function updateUploadButtonWithImage(imageUrl) {
-  const imagePreview = document.getElementById('image-preview');
-  const uploadButton = document.getElementById('upload-button');
+  const imagePreview = document.getElementById("image-preview");
+  const uploadButton = document.getElementById("upload-button");
 
   imagePreview.src = imageUrl;
-  imagePreview.style.display = 'block';
-  uploadButton.style.display = 'none';
+  imagePreview.style.display = "block";
+  uploadButton.style.display = "none";
 }
+
+document.querySelector(".close-icon").addEventListener("click", function () {
+  if (currentUploadXHR && currentUploadXHR.readyState !== XMLHttpRequest.DONE) {
+    currentUploadXHR.abort(); // Abort the ongoing upload
+    displayNotification("Upload canceled.", "info");
+  }
+  resetUploadButton();
+  uploadedImageUrl = null; // Reset the uploaded image URL
+});
 
 function resetUploadButton() {
-  const imagePreview = document.getElementById('image-preview');
-  const uploadButton = document.getElementById('upload-button');
+  const imagePreview = document.getElementById("image-preview");
+  const uploadButton = document.getElementById("upload-button");
+  const imageLoadingIndicator = document.querySelector(".loading-indicator");
+  const closePreview = document.querySelector(".close-icon");
+  imagePreview.classList.remove("dimmed");
 
-  imagePreview.style.display = 'none';
-  uploadButton.style.display = 'block';
-}
-
-function enableUploadButton() {
-  const uploadButton = document.getElementById('upload-button');
-  uploadButton.disabled = false;
-  uploadButton.style.cursor = 'pointer';
-}
-
-function disableUploadButton() {
-  const uploadButton = document.getElementById('upload-button');
-  uploadButton.disabled = true;
+  closePreview.style.display = "none";
+  imagePreview.style.display = "none";
+  uploadButton.style.display = "block";
+  imageLoadingIndicator.style.display = "none";
 }
 
 function displayLocalImagePreview(file) {
@@ -575,9 +606,11 @@ function displayLocalImagePreview(file) {
   reader.onload = function (e) {
     const imageUrl = e.target.result;
     updateUploadButtonWithImage(imageUrl);
+    document.querySelector(".loading-indicator").style.display = "block";
+    document.querySelector(".close-icon").style.display = "block";
+    document.getElementById("image-preview").classList.add("dimmed");
   };
   reader.readAsDataURL(file);
-  // No need to call disableUploadButton since the button will be hidden
 }
 
 document.getElementById("file-input").addEventListener("change", function () {

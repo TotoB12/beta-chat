@@ -175,6 +175,47 @@ display: block;
   border-radius: 10px;
   object-fit: cover;
   display: none;
+    transition: opacity 0.3s ease-in-out; /* Smooth transition for the dimming effect */
+}
+
+.image-preview.dimmed {
+    opacity: 0.5; /* Dim the image */
+}
+
+.loading-indicator {
+    display: none; /* Hidden by default */
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top: 3px solid #fff;
+    animation: spin 1s linear infinite;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.close-icon {
+    display: none;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 24px;
+    color: white;
+    cursor: pointer;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.upload-preview-container:hover .close-icon {
+    display: none;
+    opacity: 1;
 }
 
 

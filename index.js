@@ -108,8 +108,8 @@ async function composeMessageForAI(messageData) {
         parts.push(imagePart);
         consoleOutput += "\n\n[User Image Attached]";
       } else {
-        parts.push("\n\n[image removed for privacy and safety reasons]");
-        consoleOutput += "\n\n[image removed for privacy and safety reasons]";
+        parts.push("\n\n[previous image removed for privacy and safety]");
+        consoleOutput += "\n\n[previous image removed for privacy and safety]";
       }
     }
   }
