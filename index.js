@@ -62,7 +62,7 @@ wss.on("connection", function connection(ws) {
         : genAI.getGenerativeModel({ model: "gemini-pro", safetySettings });
 
       const promptParts = await composeMessageForAI(messageData);
-      console.log(promptParts);
+      // console.log(promptParts);
       const result = await model.generateContentStream(promptParts);
 
       for await (const chunk of result.stream) {
@@ -135,7 +135,7 @@ async function composeMessageForAI(messageData) {
   return parts;
 }
 
-async function urlToGenerativePart(url) {
+async function urlToGenerativePart(url, retryCount = 0) {
   try {
     const response = await fetch(url);
     if (!response.ok) {
@@ -149,8 +149,19 @@ async function urlToGenerativePart(url) {
       },
     };
   } catch (error) {
-    console.error("Error fetching image:", error);
-    // Handle the error appropriately
+    if (error.message.includes("429") && retryCount < 3) {
+      // Wait for 2^retryCount * 100 milliseconds before retrying
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 100));
+      return urlToGenerativePart(url, retryCount + 1);
+    } else {
+      console.error("Error fetching image:", error);
+      return {
+        inlineData: {
+          data: "", // return empty data or handle it as per your app's requirement
+          mimeType: "image/jpeg",
+        },
+      };
+    }
   }
 }
 
