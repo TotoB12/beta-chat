@@ -153,14 +153,15 @@ display: block;
   align-items: center;
   bottom: 10px;
   position: absolute;
-  background-size: cover; /* Ensure the image covers the button */
-  background-position: center; /* Center the image */
-  overflow: hidden; /* Hide overflow */
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
 }
 
 #upload-button:hover {
-  background-color: #f0f0f0; /* This may need adjustment or removal */
+  background-color: #f0f0f0;
 }
+
 
 
 .textarea-max-height #expander-button {
