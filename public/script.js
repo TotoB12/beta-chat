@@ -471,6 +471,7 @@ window.onload = function () {
 
 function resetConversation() {
   uploadedImageUrl = null;
+  resetUploadButton();
   document.getElementById("chat-box").innerHTML = "";
   localStorage.removeItem("chatHistory");
 
@@ -542,22 +543,20 @@ function upload(file) {
 }
 
 function updateUploadButtonWithImage(imageUrl) {
-    const uploadButton = document.getElementById('upload-button');
-    uploadButton.style.backgroundImage = `url('${imageUrl}')`;
-    uploadButton.innerHTML = '';
+  const imagePreview = document.getElementById('image-preview');
+  const uploadButton = document.getElementById('upload-button');
+
+  imagePreview.src = imageUrl;
+  imagePreview.style.display = 'block';
+  uploadButton.style.display = 'none';
 }
 
 function resetUploadButton() {
-    const uploadButton = document.getElementById('upload-button');
-    uploadButton.style.backgroundImage = '';
-    uploadButton.innerHTML = 'file_upload';
-}
+  const imagePreview = document.getElementById('image-preview');
+  const uploadButton = document.getElementById('upload-button');
 
-function resetUploadButton() {
-    const uploadButton = document.getElementById('upload-button');
-    uploadButton.style.backgroundImage = '';
-    uploadButton.innerHTML = 'file_upload';
-    enableUploadButton();
+  imagePreview.style.display = 'none';
+  uploadButton.style.display = 'block';
 }
 
 function enableUploadButton() {
@@ -578,7 +577,7 @@ function displayLocalImagePreview(file) {
     updateUploadButtonWithImage(imageUrl);
   };
   reader.readAsDataURL(file);
-  disableUploadButton();
+  // No need to call disableUploadButton since the button will be hidden
 }
 
 document.getElementById("file-input").addEventListener("change", function () {

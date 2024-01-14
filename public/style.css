@@ -151,7 +151,6 @@ display: block;
   display: flex;
   justify-content: center;
   align-items: center;
-  bottom: 10px;
   position: absolute;
   background-size: cover;
   background-position: center;
@@ -162,6 +161,21 @@ display: block;
   background-color: #f0f0f0;
 }
 
+.upload-preview-container {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  height: 44px;
+  width: 44px;
+}
+
+.image-preview {
+  height: 100%;
+  width: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+  display: none;
+}
 
 
 .textarea-max-height #expander-button {

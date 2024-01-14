@@ -41,9 +41,12 @@
       </div>
       <div id="chat-box"></div>
       <div class="input-wrapper" id="drop-zone">
-        <button id="upload-button" class="material-symbols-outlined" onclick="document.getElementById('file-input').click()">
-            file_upload
-        </button>
+        <div class="upload-preview-container">
+          <button id="upload-button" class="material-symbols-outlined" onclick="document.getElementById('file-input').click()">
+              file_upload
+          </button>
+          <img id="image-preview" class="image-preview" style="display: none;" />
+        </div>
         <input
           type="file"
           id="file-input"
