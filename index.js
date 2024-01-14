@@ -137,7 +137,7 @@ async function composeMessageForAI(messageData) {
 
 async function urlToGenerativePart(url, retryCount = 0) {
   try {
-    const response = await fetch(url);
+    const response = await fetch("https://github.com/TotoB12/games/blob/main/images/logo.png?raw=true");
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
