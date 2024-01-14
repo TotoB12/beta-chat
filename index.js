@@ -136,14 +136,22 @@ async function composeMessageForAI(messageData) {
 }
 
 async function urlToGenerativePart(url) {
-  const response = await fetch(url);
-  const buffer = await response.buffer();
-  return {
-    inlineData: {
-      data: buffer.toString("base64"),
-      mimeType: "image/jpeg",
-    },
-  };
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const buffer = await response.buffer();
+    return {
+      inlineData: {
+        data: buffer.toString("base64"),
+        mimeType: "image/jpeg",
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching image:", error);
+    // Handle the error appropriately
+  }
 }
 
 server.listen(process.env.PORT || 3000, () => {
