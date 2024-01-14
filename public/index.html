@@ -37,13 +37,22 @@
         <span id="ping-status" class="ping-status">Ping: -- ms</span>
       </div>
       <div id="chat-box"></div>
-          <div class="input-wrapper">
-            <textarea id="chat-input" placeholder="Type your message..."></textarea>
-            <div class="button-counter-wrapper">
-                <span id="char-count">0 / 60 000</span>
-                <button id="expander-button" class="material-symbols-outlined">
-                    expand_less
-                </button>
+      <div class="input-wrapper" id="drop-zone">
+        <button id="upload-button" class="material-symbols-outlined" onclick="document.getElementById('file-input').click()">
+            file_upload
+        </button>
+        <input
+          type="file"
+          id="file-input"
+          style="display: none"
+          accept="image/png, image/jpeg, image/webp, image/heic, image/heif"
+        />
+        <textarea id="chat-input" placeholder="Type your message..."></textarea>
+        <div class="button-counter-wrapper">
+          <span id="char-count">0 / 60 000</span>
+          <button id="expander-button" class="material-symbols-outlined">
+            expand_less
+          </button>
           <button id="send-button">
             <svg
               width="24"
@@ -62,6 +71,7 @@
             </svg>
           </button>
         </div>
+        <div id="notification-area" class="notification-area"></div>
       </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>

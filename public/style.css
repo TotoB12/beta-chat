@@ -56,7 +56,7 @@ body {
 
 .input-wrapper {
     position: relative;
-    border: 1px solid #cccccc;
+    border: 2px solid #cccccc;
     margin: 0 20px 20px;
     padding-left: 10px;
     background: #333;
@@ -66,6 +66,7 @@ body {
 flex-direction: row;
 justify-content: space-between;
   overflow: hidden;
+    flex-shrink: 0; /* This ensures that the input area doesn't shrink */
 }
 
 .button-counter-wrapper {
@@ -85,7 +86,7 @@ justify-content: space-between;
     flex-grow: 1;
     background: transparent;
     border: none;
-    padding: 20px;
+    padding: 20px 75px;
     color: #fff;
     outline: none;
     height: 22px;
@@ -94,7 +95,6 @@ justify-content: space-between;
     border-radius: 22px;
     /* margin-right: 17px; */
     flex-grow: 1;
-    padding-right: 75px;
 }
 
 #send-button, #expander-button {
@@ -120,6 +120,41 @@ justify-content: space-between;
 }
 
 #send-button.hover-effect {
+    background-color: #f0f0f0;
+}
+
+#char-count {
+    background-color: transparent;
+    color: white;
+    display: none;
+    /* font-size: 0.9em; */
+    text-align: center;
+    word-wrap: break-word;
+display: block; 
+}
+
+#char-count hr {
+    margin: 0;
+    border-top: 1px solid white;
+}
+
+#upload-button {
+  background: white;
+  color: black;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 22px;
+  cursor: pointer;
+  outline: none;
+  height: 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  bottom: 10px;
+  position: absolute;
+}
+
+#upload-button:hover {
     background-color: #f0f0f0;
 }
 
@@ -281,20 +316,35 @@ justify-content: space-between;
     font-size: 0.8em;
 }
 
-#char-count {
-    background-color: transparent;
-    color: white;
-    display: none;
-    /* font-size: 0.9em; */
-    text-align: center;
-    word-wrap: break-word;
-display: block; 
+.notification-area {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: red;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  display: none;
 }
 
-#char-count hr {
-    margin: 0;
-    border-top: 1px solid white;
+#drop-zone.highlight {
+  border: 2px dashed #666;
 }
+
+ .uploaded-image {
+   /* max-height: 35vh;
+   max-width: 50vw; */
+   height: 35vh;
+   margin: 10px 0;
+   border-radius: 10px;
+   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+   transition: opacity 0.3s ease-in-out;
+ }
+
+ .uploaded-image-loading {
+   opacity: 0.5;
+ }
 
 .flex {
     display: flex;
