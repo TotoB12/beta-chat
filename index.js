@@ -93,9 +93,9 @@ async function composeMessageForAI(messageData) {
     //     ? `\nUser: ${entry.parts}`
     //     : `\nTotoB12: ${entry.parts}`;
     if (entry.role === "user") {
-      textPart = `\nUser: ${entry.parts}`;
+      textPart = `\n\nUser: ${entry.parts}`;
     } else if (entry.role === "model") {
-      textPart = `\nTotoB12: ${entry.parts}`;
+      textPart = `\n\nTotoB12: ${entry.parts}`;
     } else {
       textPart = `System: ${entry.parts}`;
     }
@@ -114,9 +114,9 @@ async function composeMessageForAI(messageData) {
     }
   }
 
-  const latestUserTextPart = `\nUser: ${messageData.text}`;
+  const latestUserTextPart = `\n\nUser: ${messageData.text}`;
   parts.push(latestUserTextPart);
-  consoleOutput += "\n" + latestUserTextPart;
+  consoleOutput += latestUserTextPart;
   if (messageData.imageUrl) {
     const imagePart = await urlToGenerativePart(messageData.imageUrl);
     parts.push(imagePart);
