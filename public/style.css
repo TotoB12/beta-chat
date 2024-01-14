@@ -87,7 +87,7 @@ justify-content: space-between;
     background: transparent;
     border: none;
     padding: 20px 75px;
-    padding-left: 54px;
+    padding-left: 10px;
     color: #fff;
     outline: none;
     height: 22px;
@@ -162,9 +162,9 @@ display: block;
 }
 
 .upload-preview-container {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
+  position: relative;
+  /* bottom: 10px;
+  left: 10px; */
   height: 44px;
   width: 44px;
 }
