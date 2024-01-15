@@ -135,9 +135,10 @@ async function composeMessageForAI(messageData) {
   return parts;
 }
 
-async function urlToGenerativePart(url, retryCount = 0) {
+async function urlToGenerativePart(image, retryCount = 0) {
   try {
-    const response = await fetch("https://github.com/TotoB12/games/blob/main/images/logo.png?raw=true");
+    const response = await fetch(image.link);
+    console.log(image.link);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -152,7 +153,7 @@ async function urlToGenerativePart(url, retryCount = 0) {
     if (error.message.includes("429") && retryCount < 3) {
       // Wait for 2^retryCount * 100 milliseconds before retrying
       await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 100));
-      return urlToGenerativePart(url, retryCount + 1);
+      return urlToGenerativePart(image, retryCount + 1);
     } else {
       console.error("Error fetching image:", error);
       return {

@@ -6,9 +6,10 @@ const expanderButton = document.getElementById("expander-button");
 var buffer;
 let latestAIMessageElement = null;
 let uploadedImageUrl = null;
+let uploadedImage = null;
 let isAIResponding = false;
 let lastPingTimestamp;
-let currentUploadXHR = null; // Global reference to the current upload XHR
+let currentUploadXHR = null;
 
 function sendPing() {
   lastPingTimestamp = Date.now();
@@ -34,7 +35,7 @@ function loadHistory() {
       )}</div>`;
 
       if (entry.imageUrl) {
-        displayImage(entry.imageUrl);
+        displayImage(entry.imageUrl.link);
       }
     } else if (entry.role === "model") {
       label.textContent = "TotoB12";
@@ -77,7 +78,7 @@ function updateCharacterCount() {
   }
 }
 
-function updateHistory(role, parts, updateLast = false, imageUrl = null) {
+function updateHistory(role, parts, updateLast = false, image = null) {
   let history = getHistory();
   if (
     updateLast &&
@@ -87,8 +88,8 @@ function updateHistory(role, parts, updateLast = false, imageUrl = null) {
     history[history.length - 1].parts = parts;
   } else {
     const newEntry = { role: role, parts: parts };
-    if (imageUrl && role === "user") {
-      newEntry.imageUrl = imageUrl;
+    if (image && role === "user") {
+      newEntry.image = image.link;
     }
     history.push(newEntry);
   }
@@ -255,10 +256,10 @@ function sendMessage() {
     type: "user-message",
     history: getHistory(),
     text: userText,
-    imageUrl: uploadedImageUrl,
+    imageUrl: uploadedImage,
   };
 
-  updateHistory("user", userText, false, uploadedImageUrl);
+  updateHistory("user", userText, false, uploadedImage);
 
   const userLabel = document.createElement("div");
   userLabel.className = "message-label";
@@ -278,6 +279,7 @@ function sendMessage() {
   resetUploadButton();
   latestAIMessageElement = null;
   uploadedImageUrl = null;
+  uploadedImage = null;
   ws.send(JSON.stringify(message));
   disableUserInput();
 }
@@ -477,6 +479,7 @@ window.onload = function () {
 
 function resetConversation() {
   uploadedImageUrl = null;
+  uploadedImage = null;
   resetUploadButton();
   document.getElementById("chat-box").innerHTML = "";
   localStorage.removeItem("chatHistory");
@@ -527,10 +530,12 @@ function upload(file) {
         document.querySelector(".loading-indicator").style.display = "none";
         document.getElementById("image-preview").classList.remove("dimmed");
         uploadedImageUrl = response.data.link;
+        uploadedImage = response.data;
         displayNotification(
           "Upload successful. Image URL: " + response.data.link,
           "success",
         );
+        console.log(response.data);
         const smallThumbnailUrl = uploadedImageUrl.replace(
           /(\.[\w\d_-]+)$/i,
           "s$1",
@@ -556,7 +561,6 @@ function upload(file) {
     currentUploadXHR = null;
   };
 
-  // Handle the abort event
   currentUploadXHR.onabort = function () {
     displayNotification("Upload canceled.", "info");
     resetUploadButton();
@@ -581,11 +585,12 @@ function updateUploadButtonWithImage(imageUrl) {
 
 document.querySelector(".close-icon").addEventListener("click", function () {
   if (currentUploadXHR && currentUploadXHR.readyState !== XMLHttpRequest.DONE) {
-    currentUploadXHR.abort(); // Abort the ongoing upload
+    currentUploadXHR.abort();
     displayNotification("Upload canceled.", "info");
   }
   resetUploadButton();
-  uploadedImageUrl = null; // Reset the uploaded image URL
+  uploadedImageUrl = null;
+  uploadedImage = null;
 });
 
 function resetUploadButton() {

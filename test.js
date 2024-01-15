@@ -1,23 +1,30 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+var myHeaders = new Headers();
+myHeaders.append("Authorization", "Client-ID 6a8a51f3d7933e1");
 
-// Access your API key as an environment variable (see "Set up your API key" above)
-const genAI = new GoogleGenerativeAI(token);
+var requestOptions = {
+  method: 'GET',
+  headers: myHeaders,
+  redirect: 'follow'
+};
 
-async function run() {
-  // For text-only input, use the gemini-pro model
-  const model = genAI.getGenerativeModel({ model: "gemini-pro"});
+// Fetching the metadata
+fetch("https://api.imgur.com/3/image/cL5nElu", requestOptions)
+  .then(response => response.json())
+  .then(result => {
+    // Extracting the image link
+    var imageUrl = result.data.link;
+    console.log('Image URL:', imageUrl);
 
-  const prompt = "What can you do?"
-
-  // Use streaming with text-only input
-  const result = await model.generateContentStream(prompt);
-
-  let text = '';
-  for await (const chunk of result.stream) {
-    const chunkText = chunk.text();
-    console.log(chunkText);
-    text += chunkText;
-  }
-}
-
-run();
+    // Fetching the actual image data
+    return fetch(imageUrl);
+  })
+  .then(imageResponse => imageResponse.blob())
+  .then(imageBlob => {
+    // Here you can process the imageBlob, for example, display it in an img tag
+    // var imageUrl = URL.createObjectURL(imageBlob);
+    // var imgTag = document.createElement('img');
+    // imgTag.src = imageUrl;
+    // document.body.appendChild(imgTag);
+    console.log('Image Blob:', imageBlob);
+  })
+  .catch(error => console.log('error', error));
