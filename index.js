@@ -10,9 +10,8 @@ const {
   HarmCategory,
 } = require("@google/generative-ai");
 
-const request = require('request');
-const { promisify } = require('util');
-const requestPromise = promisify(request);
+const axios = require('axios');
+
 
 const app = express();
 const server = http.createServer(app);
@@ -48,7 +47,7 @@ wss.on("connection", function connection(ws) {
   ws.on("message", async function incoming(messageBuffer) {
     try {
       const messageData = JSON.parse(messageBuffer.toString());
-      // console.log(messageData);
+      console.log(messageData);
       if (messageData.type === "ping") {
         ws.send(JSON.stringify({ type: "pong" }));
         return;
@@ -66,7 +65,7 @@ wss.on("connection", function connection(ws) {
         : genAI.getGenerativeModel({ model: "gemini-pro", safetySettings });
 
       const promptParts = await composeMessageForAI(messageData);
-      console.log(promptParts);
+      // console.log(promptParts);
       const result = await model.generateContentStream(promptParts);
 
       for await (const chunk of result.stream) {
@@ -139,20 +138,15 @@ async function composeMessageForAI(messageData) {
   return parts;
 }
 
+
 async function urlToGenerativePart(image, retryCount = 0) {
   try {
-    const response = await requestPromise({
-      method: 'GET',
-      url: image.link,
-      encoding: null, // Important to get the buffer directly
+    const response = await axios.get(image.link, {
+      responseType: 'arraybuffer' // Important to get the response as a buffer
     });
     console.log(image.link);
 
-    if (response.statusCode !== 200) {
-      throw new Error(`HTTP error! status: ${response.statusCode}`);
-    }
-
-    const buffer = response.body; // The body is already a buffer
+    const buffer = Buffer.from(response.data, 'binary');
     return {
       inlineData: {
         data: buffer.toString("base64"),
@@ -160,11 +154,11 @@ async function urlToGenerativePart(image, retryCount = 0) {
       },
     };
   } catch (error) {
-    if (error.message.includes("429") && retryCount < 3) {
+    if (error.response && error.response.status === 429 && retryCount < 3) {
       await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
       return urlToGenerativePart(image, retryCount + 1);
     } else {
-      console.error("Error fetching image:", error);
+      console.error("Error fetching image:", error.message);
       return {
         inlineData: {
           data: "",
