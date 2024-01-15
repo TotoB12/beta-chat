@@ -10,6 +10,10 @@ const {
   HarmCategory,
 } = require("@google/generative-ai");
 
+const request = require('request');
+const { promisify } = require('util');
+const requestPromise = promisify(request);
+
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
@@ -62,7 +66,7 @@ wss.on("connection", function connection(ws) {
         : genAI.getGenerativeModel({ model: "gemini-pro", safetySettings });
 
       const promptParts = await composeMessageForAI(messageData);
-      // console.log(promptParts);
+      console.log(promptParts);
       const result = await model.generateContentStream(promptParts);
 
       for await (const chunk of result.stream) {
@@ -137,12 +141,18 @@ async function composeMessageForAI(messageData) {
 
 async function urlToGenerativePart(image, retryCount = 0) {
   try {
-    const response = await fetch(image.link);
+    const response = await requestPromise({
+      method: 'GET',
+      url: image.link,
+      encoding: null, // Important to get the buffer directly
+    });
     console.log(image.link);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+
+    if (response.statusCode !== 200) {
+      throw new Error(`HTTP error! status: ${response.statusCode}`);
     }
-    const buffer = await response.buffer();
+
+    const buffer = response.body; // The body is already a buffer
     return {
       inlineData: {
         data: buffer.toString("base64"),
@@ -151,14 +161,13 @@ async function urlToGenerativePart(image, retryCount = 0) {
     };
   } catch (error) {
     if (error.message.includes("429") && retryCount < 3) {
-      // Wait for 2^retryCount * 100 milliseconds before retrying
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 100));
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
       return urlToGenerativePart(image, retryCount + 1);
     } else {
       console.error("Error fetching image:", error);
       return {
         inlineData: {
-          data: "", // return empty data or handle it as per your app's requirement
+          data: "",
           mimeType: "image/jpeg",
         },
       };
