@@ -16,7 +16,7 @@ function sendPing() {
   ws.send(JSON.stringify({ type: "ping" }));
 }
 
-const ws = new WebSocket(`wss://${window.location.host}`);
+let ws = new WebSocket(`wss://${window.location.host}`);
 
 function loadHistory() {
   const history = getHistory();
@@ -79,7 +79,7 @@ function updateCharacterCount() {
   }
 }
 
-function updateHistory(role, parts, updateLast = false, image = null) {
+function updateHistory(role, parts, updateLast = false, image = null, error = false) {
   let history = getHistory();
   if (
     updateLast &&
@@ -87,8 +87,11 @@ function updateHistory(role, parts, updateLast = false, image = null) {
     history[history.length - 1].role === "model"
   ) {
     history[history.length - 1].parts = parts;
+    if (error) {
+      history[history.length - 1].error = true;
+    }
   } else {
-    const newEntry = { role: role, parts: parts };
+    const newEntry = { role: role, parts: parts, error: error };
     if (image && role === "user") {
       newEntry.image = image;
     }
@@ -138,15 +141,17 @@ You begin your service now.`,
 }
 
 function updateConnectionStatus(status) {
+  const connectionStatusElement = document.getElementById("connection-status");
+  const pingStatusElement = document.getElementById("ping-status");
+
   if (status === "online") {
-    document.getElementById("connection-status").innerHTML =
-      "Status: 🟢 Online";
+    connectionStatusElement.innerHTML = "Status: 🟢 Online";
   } else if (status === "offline") {
-    document.getElementById("connection-status").innerHTML =
-      "Status: 🔴 Offline, Please Refresh";
+    connectionStatusElement.innerHTML = "Status: 🔴 Offline, Please Refresh";
+    pingStatusElement.innerHTML = "Ping: -- ms";
   } else {
-    document.getElementById("connection-status").innerHTML =
-      "Status: 🔴 Error, Please Refresh";
+    connectionStatusElement.innerHTML = "Status: 🔴 Error, Please Refresh";
+    pingStatusElement.innerHTML = "Ping: -- ms";
   }
 }
 
@@ -160,14 +165,9 @@ function simulateButtonHover() {
 
 ws.onopen = function () {
   sendPing();
+  updateConnectionStatus("online");
   sendButton.addEventListener("click", sendMessage);
-  inputField.addEventListener("keydown", function (event) {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      sendMessage();
-      simulateButtonHover();
-    }
-  });
+  enableUserInput();
 
   updateConnectionStatus("online");
 };
@@ -187,6 +187,10 @@ ws.onmessage = function (event) {
     if (data.type === "pong") {
       const latency = Date.now() - lastPingTimestamp;
       updatePingDisplay(latency);
+    }
+
+    if (data.type === "error") {
+      processAIResponse(data.text, true);
     }
 
     if (data.type === "AI_COMPLETE" && data.uniqueIdentifier === "7777") {
@@ -212,7 +216,9 @@ function checkNetworkStatus() {
   if (navigator.onLine) {
     if (ws.readyState === WebSocket.OPEN) {
       sendPing();
+      updateConnectionStatus("online"); // Update to online if WebSocket is open
     } else {
+      ws = new WebSocket(`wss://${window.location.host}`);
       updateConnectionStatus("offline");
     }
   } else {
@@ -222,10 +228,10 @@ function checkNetworkStatus() {
 
 setInterval(checkNetworkStatus, 5000);
 
-function processAIResponse(message) {
+function processAIResponse(message, isError = false) {
   if (!latestAIMessageElement) {
     latestAIMessageElement = document.createElement("div");
-    latestAIMessageElement.className = "message ai-message";
+    latestAIMessageElement.className = isError ? "message ai-error-message" : "message ai-message";
     const label = document.createElement("div");
     label.className = "message-label";
     label.textContent = "TotoB12";
@@ -238,7 +244,11 @@ function processAIResponse(message) {
   }
   latestAIMessageElement.fullMessage += message;
 
-  updateHistory("model", latestAIMessageElement.fullMessage.trim(), true);
+  if (isError) {
+    updateHistory("model", latestAIMessageElement.fullMessage.trim(), true, null, true);
+  } else {
+    updateHistory("model", latestAIMessageElement.fullMessage.trim(), true);
+  }
 
   const htmlContent = marked.parse(latestAIMessageElement.fullMessage);
   latestAIMessageElement.innerHTML = htmlContent;
@@ -257,7 +267,7 @@ function sendMessage() {
     type: "user-message",
     history: getHistory(),
     text: userText,
-    imageUrl: uploadedImage,
+    image: uploadedImage,
   };
 
   updateHistory("user", userText, false, uploadedImage);
@@ -329,6 +339,7 @@ function handleEnterKeyPress(event) {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     sendMessage();
+    simulateButtonHover();
   }
 }
 

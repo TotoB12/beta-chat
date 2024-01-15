@@ -16,15 +16,15 @@ const wss = new WebSocket.Server({ server });
 const genAI = new GoogleGenerativeAI(process.env["API_KEY"]);
 const safetySettings = [
   {
-    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-    threshold: HarmBlockThreshold.BLOCK_NONE,
-  },
-  {
     category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
     threshold: HarmBlockThreshold.BLOCK_NONE,
   },
   {
     category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
     threshold: HarmBlockThreshold.BLOCK_NONE,
   },
   {
@@ -36,8 +36,8 @@ const safetySettings = [
 app.use(bodyParser.json());
 app.use(express.static("public"));
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 wss.on("connection", function connection(ws) {
@@ -50,9 +50,10 @@ wss.on("connection", function connection(ws) {
         return;
       }
 
+      console.log(messageData);
+
       const hasImage =
-        messageData.history.some((entry) => entry.imageUrl) ||
-        messageData.imageUrl;
+        messageData.history.some((entry) => entry.image) || messageData.image;
 
       const model = hasImage
         ? genAI.getGenerativeModel({
@@ -74,7 +75,19 @@ wss.on("connection", function connection(ws) {
       );
     } catch (error) {
       console.error(error);
-      ws.send("Error: Unable to process the request.");
+
+      let blockReason = "";
+      if (error.response && error.response.promptFeedback) {
+        blockReason = `Request was blocked due to ${error.response.promptFeedback.blockReason}.`;
+      } else {
+        blockReason = "Error: Unable to process the request.";
+      }
+
+      // ws.send(blockReason);
+      ws.send(JSON.stringify({ type: "error", text: blockReason }));
+      ws.send(
+        JSON.stringify({ type: "AI_COMPLETE", uniqueIdentifier: "7777" }),
+      );
     }
   });
 });
@@ -85,7 +98,7 @@ async function composeMessageForAI(messageData) {
   let latestImageIndex = null;
 
   messageData.history.forEach((entry, index) => {
-    if (entry.imageUrl && entry.role === "user") {
+    if (entry.image && entry.role === "user") {
       latestImageIndex = index;
     }
   });
@@ -107,9 +120,9 @@ async function composeMessageForAI(messageData) {
     parts.push(textPart);
     consoleOutput += "\n" + textPart;
 
-    if (entry.imageUrl && entry.role === "user") {
-      if (i === latestImageIndex && !messageData.imageUrl) {
-        const imagePart = await urlToGenerativePart(entry.imageUrl);
+    if (entry.image && entry.role === "user") {
+      if (i === latestImageIndex && !messageData.image) {
+        const imagePart = await urlToGenerativePart(entry.image.link);
         parts.push(imagePart);
         consoleOutput += "\n\n[User Image Attached]";
       } else {
@@ -122,8 +135,9 @@ async function composeMessageForAI(messageData) {
   const latestUserTextPart = `\n\nUser: ${messageData.text}`;
   parts.push(latestUserTextPart);
   consoleOutput += latestUserTextPart;
-  if (messageData.imageUrl) {
-    const imagePart = await urlToGenerativePart(messageData.imageUrl);
+  if (messageData.image) {
+    // console.log(messageData);
+    const imagePart = await urlToGenerativePart(messageData.image.link);
     parts.push(imagePart);
     consoleOutput += "\n[User Image Attached]";
   }
@@ -137,8 +151,8 @@ async function composeMessageForAI(messageData) {
 
 async function urlToGenerativePart(image, retryCount = 0) {
   try {
-    const response = await fetch(image.link);
-    console.log(image.link);
+    // console.log(image);
+    const response = await fetch(image);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -151,7 +165,9 @@ async function urlToGenerativePart(image, retryCount = 0) {
     };
   } catch (error) {
     if (error.message.includes("429") && retryCount < 3) {
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 100));
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.pow(2, retryCount) * 100),
+      );
       return urlToGenerativePart(image, retryCount + 1);
     } else {
       console.error("Error fetching image:", error);
