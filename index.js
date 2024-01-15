@@ -33,6 +33,8 @@ const safetySettings = [
   },
 ];
 
+let hasImage;
+
 app.use(bodyParser.json());
 app.use(express.static("public"));
 
@@ -44,16 +46,17 @@ wss.on("connection", function connection(ws) {
   ws.on("message", async function incoming(messageBuffer) {
     try {
       const messageData = JSON.parse(messageBuffer.toString());
-      // console.log(messageData);
       if (messageData.type === "ping") {
         ws.send(JSON.stringify({ type: "pong" }));
         return;
       }
 
-      console.log(messageData);
-
-      const hasImage =
+      // console.log(messageData);
+      hasImage =
         messageData.history.some((entry) => entry.image) || messageData.image;
+
+      const promptParts = await composeMessageForAI(messageData);
+      console.log(promptParts);
 
       const model = hasImage
         ? genAI.getGenerativeModel({
@@ -62,8 +65,6 @@ wss.on("connection", function connection(ws) {
           })
         : genAI.getGenerativeModel({ model: "gemini-pro", safetySettings });
 
-      const promptParts = await composeMessageForAI(messageData);
-      // console.log(promptParts);
       const result = await model.generateContentStream(promptParts);
 
       for await (const chunk of result.stream) {
@@ -83,7 +84,6 @@ wss.on("connection", function connection(ws) {
         blockReason = "Error: Unable to process the request.";
       }
 
-      // ws.send(blockReason);
       ws.send(JSON.stringify({ type: "error", text: blockReason }));
       ws.send(
         JSON.stringify({ type: "AI_COMPLETE", uniqueIdentifier: "7777" }),
@@ -91,6 +91,17 @@ wss.on("connection", function connection(ws) {
     }
   });
 });
+
+function wasImageBlockedByAI(history, imageMessageIndex) {
+  // Check if the next message after the user message with the image is an AI response
+  if (history.length > imageMessageIndex + 1) {
+    const nextMessage = history[imageMessageIndex + 1];
+    if (nextMessage.role === "model" && nextMessage.error === true) {
+      return true;
+    }
+  }
+  return false;
+}
 
 async function composeMessageForAI(messageData) {
   let parts = [];
@@ -122,7 +133,12 @@ async function composeMessageForAI(messageData) {
 
     if (entry.image && entry.role === "user") {
       if (i === latestImageIndex && !messageData.image) {
-        const imagePart = await urlToGenerativePart(entry.image.link);
+        const wasThisImageBlocked = wasImageBlockedByAI(messageData.history, i);
+        const imagePart = await urlToGenerativePart(
+          entry.image.link,
+          0,
+          wasThisImageBlocked,
+        );
         parts.push(imagePart);
         consoleOutput += "\n\n[User Image Attached]";
       } else {
@@ -149,26 +165,35 @@ async function composeMessageForAI(messageData) {
   return parts;
 }
 
-async function urlToGenerativePart(image, retryCount = 0) {
+async function urlToGenerativePart(
+  imageUrl,
+  retryCount = 0,
+  wasBlocked = false,
+) {
   try {
-    // console.log(image);
-    const response = await fetch(image);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    console.log(wasBlocked);
+    if (wasBlocked === false) {
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const buffer = await response.buffer();
+      return {
+        inlineData: {
+          data: buffer.toString("base64"),
+          mimeType: "image/jpeg",
+        },
+      };
+    } else {
+      hasImage = null;
+      return "[image removed for safety]";
     }
-    const buffer = await response.buffer();
-    return {
-      inlineData: {
-        data: buffer.toString("base64"),
-        mimeType: "image/jpeg",
-      },
-    };
   } catch (error) {
     if (error.message.includes("429") && retryCount < 3) {
       await new Promise((resolve) =>
         setTimeout(resolve, Math.pow(2, retryCount) * 100),
       );
-      return urlToGenerativePart(image, retryCount + 1);
+      return urlToGenerativePart(imageUrl, retryCount + 1, wasBlocked);
     } else {
       console.error("Error fetching image:", error);
       return {
