@@ -34,8 +34,9 @@ function loadHistory() {
         "<br>",
       )}</div>`;
 
-      if (entry.imageUrl) {
-        displayImage(entry.imageUrl.link);
+      if (entry.image) {
+        console.log(entry);
+        displayImage(entry.image.link);
       }
     } else if (entry.role === "model") {
       label.textContent = "TotoB12";
@@ -89,7 +90,7 @@ function updateHistory(role, parts, updateLast = false, image = null) {
   } else {
     const newEntry = { role: role, parts: parts };
     if (image && role === "user") {
-      newEntry.image = image.link;
+      newEntry.image = image;
     }
     history.push(newEntry);
   }

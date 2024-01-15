@@ -10,9 +10,6 @@ const {
   HarmCategory,
 } = require("@google/generative-ai");
 
-const axios = require('axios');
-
-
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
@@ -47,7 +44,7 @@ wss.on("connection", function connection(ws) {
   ws.on("message", async function incoming(messageBuffer) {
     try {
       const messageData = JSON.parse(messageBuffer.toString());
-      console.log(messageData);
+      // console.log(messageData);
       if (messageData.type === "ping") {
         ws.send(JSON.stringify({ type: "pong" }));
         return;
@@ -138,15 +135,14 @@ async function composeMessageForAI(messageData) {
   return parts;
 }
 
-
 async function urlToGenerativePart(image, retryCount = 0) {
   try {
-    const response = await axios.get(image.link, {
-      responseType: 'arraybuffer' // Important to get the response as a buffer
-    });
+    const response = await fetch(image.link);
     console.log(image.link);
-
-    const buffer = Buffer.from(response.data, 'binary');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const buffer = await response.buffer();
     return {
       inlineData: {
         data: buffer.toString("base64"),
@@ -154,11 +150,11 @@ async function urlToGenerativePart(image, retryCount = 0) {
       },
     };
   } catch (error) {
-    if (error.response && error.response.status === 429 && retryCount < 3) {
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+    if (error.message.includes("429") && retryCount < 3) {
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 100));
       return urlToGenerativePart(image, retryCount + 1);
     } else {
-      console.error("Error fetching image:", error.message);
+      console.error("Error fetching image:", error);
       return {
         inlineData: {
           data: "",
