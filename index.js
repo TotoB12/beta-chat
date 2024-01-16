@@ -42,6 +42,10 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+app.get("/c/:uuid", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
 wss.on("connection", function connection(ws) {
   ws.on("message", async function incoming(messageBuffer) {
     try {
@@ -93,7 +97,6 @@ wss.on("connection", function connection(ws) {
 });
 
 function wasImageBlockedByAI(history, imageMessageIndex) {
-  // Check if the next message after the user message with the image is an AI response
   if (history.length > imageMessageIndex + 1) {
     const nextMessage = history[imageMessageIndex + 1];
     if (nextMessage.role === "model" && nextMessage.error === true) {
@@ -132,8 +135,9 @@ async function composeMessageForAI(messageData) {
     consoleOutput += "\n" + textPart;
 
     if (entry.image && entry.role === "user") {
+      const wasThisImageBlocked = wasImageBlockedByAI(messageData.history, i);
       if (i === latestImageIndex && !messageData.image) {
-        const wasThisImageBlocked = wasImageBlockedByAI(messageData.history, i);
+        // const wasThisImageBlocked = wasImageBlockedByAI(messageData.history, i);
         const imagePart = await urlToGenerativePart(
           entry.image.link,
           0,
@@ -142,8 +146,13 @@ async function composeMessageForAI(messageData) {
         parts.push(imagePart);
         consoleOutput += "\n\n[User Image Attached]";
       } else {
+        if (wasThisImageBlocked ===true ) {
+          parts.push("\n\n[image removed for safety]");
+          consoleOutput += "\n\n[image removed for safety]";
+        } else {
         parts.push("\n\n[previous image removed for privacy and safety]");
         consoleOutput += "\n\n[previous image removed for privacy and safety]";
+        }
       }
     }
   }
