@@ -59,7 +59,7 @@ function loadHistory() {
       div.innerHTML = marked.parse(entry.parts);
       chatBox.appendChild(div);
     } else if (entry.role === "system") {
-      // system message if needed
+      // system message
     }
   }
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -119,11 +119,9 @@ function updateHistory(role, parts, updateLast = false, image = null, error = fa
   }
 
 function debugLogAllConversations() {
-  // Iterate over all keys in the local storage
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
 
-    // Check if the key is a UUID (you might need a more robust check here)
     if (key && key.includes("-")) {
       const conversation = localStorage.getItem(key);
       console.log(`Conversation UUID: ${key}`);
@@ -258,7 +256,7 @@ function checkNetworkStatus() {
   if (navigator.onLine) {
     if (ws.readyState === WebSocket.OPEN) {
       sendPing();
-      updateConnectionStatus("online"); // Update to online if WebSocket is open
+      updateConnectionStatus("online");
     } else {
       ws = new WebSocket(`wss://${window.location.host}`);
       updateConnectionStatus("offline");
@@ -547,12 +545,9 @@ window.onload = function () {
     currentConversationUUID = pathParts[2];
     const history = getHistory();
     if (history && history.length > 0) {
-      // Load the conversation history
       loadHistory();
     } else {
-      // Handle invalid UUID or missing conversation
       console.log("Conversation not found for UUID:", currentConversationUUID);
-      // Optionally redirect to home or show a message
     }
   } else {
     currentConversationUUID = null;

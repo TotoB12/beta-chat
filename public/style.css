@@ -66,7 +66,7 @@ body {
 flex-direction: row;
 justify-content: space-between;
   overflow: hidden;
-    flex-shrink: 0; /* This ensures that the input area doesn't shrink */
+    flex-shrink: 0;
 }
 
 .button-counter-wrapper {
@@ -175,15 +175,15 @@ display: block;
   border-radius: 10px;
   object-fit: cover;
   display: none;
-    transition: opacity 0.3s ease-in-out; /* Smooth transition for the dimming effect */
+    transition: opacity 0.3s ease-in-out;
 }
 
 .image-preview.dimmed {
-    opacity: 0.5; /* Dim the image */
+    opacity: 0.5;
 }
 
 .loading-indicator {
-    display: none; /* Hidden by default */
+    display: none;
     width: 20px;
     height: 20px;
     border: 3px solid rgba(255, 255, 255, 0.3);
