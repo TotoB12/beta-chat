@@ -572,6 +572,8 @@ function resetConversation() {
   document.getElementById("chat-box").innerHTML = "";
   currentConversationUUID = null;
   latestAIMessageElement = null;
+
+  window.history.pushState(null, null, '/');
 }
 
 newChatButton.addEventListener("click", function () {
