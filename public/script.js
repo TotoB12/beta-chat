@@ -11,6 +11,7 @@ let isAIResponding = false;
 let lastPingTimestamp;
 let currentUploadXHR = null;
 let currentConversationUUID = null;
+let isNewConversation = false;
 
 function generateUUID() {
   let uuid;
@@ -112,7 +113,13 @@ function updateHistory(role, parts, updateLast = false, image = null, error = fa
   }
   if (!currentConversationUUID) {
     currentConversationUUID = generateUUID();
+    console.log('haaaaaaaaaaaa');
     window.history.pushState(null, null, `/c/${currentConversationUUID}`);
+  }
+
+  if (isNewConversation) {
+    window.history.pushState(null, null, `/c/${currentConversationUUID}`);
+    isNewConversation = false;
   }
 
   localStorage.setItem(currentConversationUUID, JSON.stringify(history));
@@ -173,12 +180,13 @@ You begin your service now.`,
 
   if (!currentConversationUUID) {
     currentConversationUUID = generateUUID();
+    isNewConversation = true;
     return defaultConversationStarter;
   }
 
   const history = localStorage.getItem(currentConversationUUID);
   return history ? JSON.parse(history) : defaultConversationStarter;
-}
+  }
 
 function updateConnectionStatus(status) {
   const connectionStatusElement = document.getElementById("connection-status");
