@@ -57,8 +57,8 @@ body {
 .input-wrapper {
     position: relative;
     border: 2px solid #cccccc;
-    margin: 0 20px 20px;
-    padding-left: 10px;
+    margin: 20px 20px;
+    padding-left: 54px;
     background: #333;
     border-radius: 22px;
     display: flex;
@@ -162,11 +162,11 @@ display: block;
 }
 
 .upload-preview-container {
-  position: relative;
-  /* bottom: 10px;
-  left: 10px; */
-  height: 44px;
-  width: 44px;
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    height: 44px;
+    width: 44px;
 }
 
 .image-preview {
@@ -344,6 +344,21 @@ display: block;
     transform: none;
 }
 
+#menu li {
+    padding: 15px 20px;
+    font-size: 18px;
+    background-color: #404040;
+    margin: 5px 0;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+}
+
+#menu li:hover {
+    background-color: #505050;
+    transform: scale(1.02);
+}
+
 #newChatButton {
     position: absolute;
     top: 12px;
@@ -444,8 +459,8 @@ display: block;
     background-color: rgba(0, 0, 0, 0.6);
     border-radius: 15px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-    z-index: 100;
-    transition: opacity 0.5s ease-in-out;
+    /* z-index: 100; */
+    transition: opacity 0.3s ease-in-out;
     opacity: 0;
     pointer-events: none;
 }

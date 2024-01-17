@@ -176,7 +176,7 @@ function updateHistory(
 
   if (isNewConversation) {
     window.history.pushState(null, null, `/c/${currentConversationUUID}`);
-    isNewConversation = false;
+    // isNewConversation = false;
   }
 
   localStorage.setItem(currentConversationUUID, JSON.stringify(history));
@@ -197,6 +197,7 @@ function debugLogAllConversations() {
 function clearLocalStorage() {
   localStorage.clear();
   console.log("Local storage cleared.");
+  window.location.href = "/";
 }
 
 function getHistory() {
@@ -243,6 +244,52 @@ You begin your service now.`,
 
   const history = localStorage.getItem(currentConversationUUID);
   return history ? JSON.parse(history) : defaultConversationStarter;
+}
+
+function updateMenuWithConversations() {
+    const menu = document.getElementById("menu");
+    const resetButton = menu.querySelector('#newChatButton');
+    menu.innerHTML = '';
+    menu.appendChild(resetButton);
+
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.includes("-")) {
+            const conversation = JSON.parse(localStorage.getItem(key));
+            const fourthMessage = conversation[3]?.parts || "New Conversation";
+            const truncatedTitle = fourthMessage.length > 100 
+                                   ? fourthMessage.substring(0, 100) + "..." 
+                                   : fourthMessage;
+
+            const menuItem = document.createElement("li");
+            menuItem.textContent = truncatedTitle;
+            menuItem.style.whiteSpace = "nowrap";
+            menuItem.style.overflow = "hidden";
+            menuItem.style.textOverflow = "ellipsis";
+            menuItem.onclick = () => loadConversation(key);
+            menu.appendChild(menuItem);
+        }
+    }
+}
+
+function loadConversation(uuid) {
+    if (!validateUUID(uuid)) {
+        console.error("Invalid UUID:", uuid);
+        return;
+    }
+
+    currentConversationUUID = uuid;
+    document.getElementById("chat-box").innerHTML = "";
+    loadHistory();
+    window.history.pushState(null, null, `/c/${uuid}`);
+    updateMenuWithConversations();
+
+    const menuToggleCheckbox = document.querySelector("#menuToggle input");
+    if (menuToggleCheckbox.checked) {
+        menuToggleCheckbox.click();
+    }
+
+    updateChatBoxVisibility();
 }
 
 function updateConnectionStatus(status) {
@@ -370,50 +417,57 @@ function processAIResponse(message, isError = false) {
 }
 
 function sendMessage() {
-  const userText = inputField.value.trim();
-  if (userText.length > 60000) {
-    alert("Character limit exceeded. Please shorten your message.");
-    return;
-  }
-  if (userText === "" || isAIResponding) return;
+    const userText = inputField.value.trim();
+    if (userText.length > 60000) {
+        alert("Character limit exceeded. Please shorten your message.");
+        return;
+    }
+    if (userText === "" || isAIResponding) return;
 
-  const message = {
-    type: "user-message",
-    history: getHistory(),
-    text: userText,
-    image: uploadedImage,
-  };
+    const message = {
+        type: "user-message",
+        history: getHistory(),
+        text: userText,
+        image: uploadedImage,
+    };
 
-  updateHistory("user", userText, false, uploadedImage);
-
-  const userLabel = document.createElement("div");
-  userLabel.className = "message-label";
-  userLabel.textContent = "You";
-  chatBox.appendChild(userLabel);
-  chatBox.innerHTML += `<div class="message user-message">${userText.replace(
-    /\n/g,
-    "<br>",
-  )}</div>`;
-
-  if (uploadedImageUrl) {
-    displayImage(uploadedImageUrl);
-  }
-
-  if (!currentConversationUUID) {
-    currentConversationUUID = generateUUID();
     updateHistory("user", userText, false, uploadedImage);
+
+    const userLabel = document.createElement("div");
+    userLabel.className = "message-label";
+    userLabel.textContent = "You";
+    chatBox.appendChild(userLabel);
+    chatBox.innerHTML += `<div class="message user-message">${userText.replace(
+        /\n/g,
+        "<br>",
+    )}</div>`;
+
+    if (uploadedImageUrl) {
+        displayImage(uploadedImageUrl);
+    }
+
+    if (!currentConversationUUID) {
+        currentConversationUUID = generateUUID();
+        updateHistory("user", userText, false, uploadedImage);
+        isNewConversation = true; 
+    }
+
+  if (isNewConversation) {
+      updateMenuWithConversations();
+      updateChatBoxVisibility();
+      isNewConversation = false;
   }
 
-  inputField.value = "";
-  resetTextarea();
-  resetUploadButton();
-  latestAIMessageElement = null;
-  uploadedImageUrl = null;
-  uploadedImage = null;
-  ws.send(JSON.stringify(message));
-  disableUserInput();
-  updateChatBoxVisibility();
+    inputField.value = "";
+    resetTextarea();
+    resetUploadButton();
+    latestAIMessageElement = null;
+    uploadedImageUrl = null;
+    uploadedImage = null;
+    ws.send(JSON.stringify(message));
+    disableUserInput();
 }
+
 
 function displayImage(imageUrl) {
   const smallThumbnailUrl = imageUrl.replace(/(\.[\w\d_-]+)$/i, "t$1");
@@ -614,7 +668,6 @@ window.onload = function () {
       currentConversationUUID = potentialUUID;
       loadHistory();
     } else {
-      // Invalid UUID or conversation does not exist - redirect to main page
       window.location.href = "/";
     }
   } else {
@@ -626,6 +679,7 @@ window.onload = function () {
   updateChatBoxVisibility();
   setupAnimCanvas();
   update_anim(0);
+    updateMenuWithConversations();
 };
 
 function resetConversation() {
@@ -637,8 +691,9 @@ function resetConversation() {
   latestAIMessageElement = null;
 
   window.history.pushState(null, null, "/");
+  updateMenuWithConversations();
   updateChatBoxVisibility();
-}
+  }
 
 newChatButton.addEventListener("click", function () {
   resetConversation();
