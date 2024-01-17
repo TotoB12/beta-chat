@@ -184,8 +184,11 @@ async function urlToGenerativePart(
   retryCount = 0,
   wasBlocked = false,
 ) {
+  // not that great of a way to do this, but it works
+  imageUrl = imageUrl.replace("i.imgur.com", "imgin.voidnet.tech");
+  console.log(imageUrl);
   try {
-    console.log(wasBlocked);
+    // console.log(wasBlocked);
     if (wasBlocked === false) {
       const response = await fetch(imageUrl);
       if (!response.ok) {
