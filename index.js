@@ -32,6 +32,13 @@ const safetySettings = [
     threshold: HarmBlockThreshold.BLOCK_NONE,
   },
 ];
+const generationConfig = {
+  stopSequences: ["red"],
+  maxOutputTokens: 200,
+  temperature: 0.9,
+  topP: 0.1,
+  topK: 16,
+};
 
 let hasImage;
 
@@ -60,23 +67,29 @@ wss.on("connection", function connection(ws) {
       }
 
       // console.log(messageData);
-      hasImage =
-        messageData.history.some((entry) => entry.image) || messageData.image;
+      hasImage = messageData.image || messageData.history.some(entry => entry.image && !wasMessageBlockedByAI(messageData.history, messageData.history.indexOf(entry)));
+
 
       const promptParts = await composeMessageForAI(messageData);
-      // console.log(promptParts);
+      console.log(promptParts);
 
       const model = hasImage
         ? genAI.getGenerativeModel({
             model: "gemini-pro-vision",
             safetySettings,
+            generationConfig,
           })
-        : genAI.getGenerativeModel({ model: "gemini-pro", safetySettings });
+        : genAI.getGenerativeModel({
+            model: "gemini-pro",
+            safetySettings,
+            generationConfig,
+          });
 
       const result = await model.generateContentStream(promptParts);
 
       for await (const chunk of result.stream) {
         ws.send(chunk.text());
+        console.log(chunk.text());
       }
 
       ws.send(
@@ -100,7 +113,7 @@ wss.on("connection", function connection(ws) {
   });
 });
 
-function wasImageBlockedByAI(history, imageMessageIndex) {
+function wasMessageBlockedByAI(history, imageMessageIndex) {
   if (history.length > imageMessageIndex + 1) {
     const nextMessage = history[imageMessageIndex + 1];
     if (nextMessage.role === "model" && nextMessage.error === true) {
@@ -113,60 +126,40 @@ function wasImageBlockedByAI(history, imageMessageIndex) {
 async function composeMessageForAI(messageData) {
   let parts = [];
   let consoleOutput = "";
-  let latestImageIndex = null;
-
-  messageData.history.forEach((entry, index) => {
-    if (entry.image && entry.role === "user") {
-      latestImageIndex = index;
-    }
-  });
 
   for (let i = 0; i < messageData.history.length; i++) {
     const entry = messageData.history[i];
-    let textPart = null;
-    // const textPart =
-    //   entry.role === "user"
-    //     ? `\nUser: ${entry.parts}`
-    //     : `\nTotoB12: ${entry.parts}`;
-    if (entry.role === "user") {
-      textPart = `\n\nUser: ${entry.parts}`;
-    } else if (entry.role === "model") {
-      textPart = `\n\nTotoB12: ${entry.parts}`;
-    } else {
-      textPart = `System: ${entry.parts}`;
+
+    const wasMessageBlocked = wasMessageBlockedByAI(messageData.history, i);
+
+    if (wasMessageBlocked) {
+      const placeholder = entry.image 
+                          ? "[message and image removed for safety]" 
+                          : "[message removed for safety]";
+      parts.push(placeholder);
+      consoleOutput += "\n" + placeholder;
+      continue;
     }
+
+    let textPart = entry.role === "user"
+      ? `\n\nUser: ${entry.parts}`
+      : `\n\nTotoB12: ${entry.parts}`;
+
     parts.push(textPart);
     consoleOutput += "\n" + textPart;
 
     if (entry.image && entry.role === "user") {
-      const wasThisImageBlocked = wasImageBlockedByAI(messageData.history, i);
-      if (i === latestImageIndex && !messageData.image) {
-        // const wasThisImageBlocked = wasImageBlockedByAI(messageData.history, i);
-        const imagePart = await urlToGenerativePart(
-          entry.image.link,
-          0,
-          wasThisImageBlocked,
-        );
-        parts.push(imagePart);
-        consoleOutput += "\n\n[User Image Attached]";
-      } else {
-        if (wasThisImageBlocked === true) {
-          parts.push("\n\n[image removed for safety]");
-          consoleOutput += "\n\n[image removed for safety]";
-        } else {
-          parts.push("\n\n[previous image removed for privacy and safety]");
-          consoleOutput +=
-            "\n\n[previous image removed for privacy and safety]";
-        }
-      }
+      const imagePart = await urlToGenerativePart(entry.image.link);
+      parts.push(imagePart);
+      consoleOutput += "\n[User Image Attached]";
     }
   }
 
   const latestUserTextPart = `\n\nUser: ${messageData.text}`;
   parts.push(latestUserTextPart);
   consoleOutput += latestUserTextPart;
+
   if (messageData.image) {
-    // console.log(messageData);
     const imagePart = await urlToGenerativePart(messageData.image.link);
     parts.push(imagePart);
     consoleOutput += "\n[User Image Attached]";
@@ -175,7 +168,6 @@ async function composeMessageForAI(messageData) {
   parts.push("\n\nTotoB12:");
   consoleOutput += "\n\nTotoB12:";
 
-  // console.log("Console Output:\n" + consoleOutput);
   return parts;
 }
 
