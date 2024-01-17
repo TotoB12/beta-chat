@@ -46,6 +46,10 @@ app.get("/c/:uuid", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+app.use((req, res, next) => {
+  res.redirect("/");
+});
+
 wss.on("connection", function connection(ws) {
   ws.on("message", async function incoming(messageBuffer) {
     try {
@@ -60,7 +64,7 @@ wss.on("connection", function connection(ws) {
         messageData.history.some((entry) => entry.image) || messageData.image;
 
       const promptParts = await composeMessageForAI(messageData);
-      console.log(promptParts);
+      // console.log(promptParts);
 
       const model = hasImage
         ? genAI.getGenerativeModel({
@@ -146,12 +150,13 @@ async function composeMessageForAI(messageData) {
         parts.push(imagePart);
         consoleOutput += "\n\n[User Image Attached]";
       } else {
-        if (wasThisImageBlocked ===true ) {
+        if (wasThisImageBlocked === true) {
           parts.push("\n\n[image removed for safety]");
           consoleOutput += "\n\n[image removed for safety]";
         } else {
-        parts.push("\n\n[previous image removed for privacy and safety]");
-        consoleOutput += "\n\n[previous image removed for privacy and safety]";
+          parts.push("\n\n[previous image removed for privacy and safety]");
+          consoleOutput +=
+            "\n\n[previous image removed for privacy and safety]";
         }
       }
     }

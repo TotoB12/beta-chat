@@ -13,16 +13,67 @@ let currentUploadXHR = null;
 let currentConversationUUID = null;
 let isNewConversation = false;
 
+const anim_canvas = document.getElementById("animation");
+const ctx = anim_canvas.getContext("2d");
+anim_canvas.width = 350;
+anim_canvas.height = 140;
+const anim_params = {
+  pointsNumber: 40,
+  widthFactor: 0.3,
+  mouseThreshold: 0.6,
+  spring: 0.4,
+  friction: 0.5,
+};
+const anim_trail = new Array(anim_params.pointsNumber);
+let useSimulatedMouse = true;
+let userMouseX = 0;
+let userMouseY = 0;
+
 function generateUUID() {
   let uuid;
   do {
-    uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-      var r = (Math.random() * 16) | 0,
-        v = c === "x" ? r : (r & 0x3) | 0x8;
-      return v.toString(16);
-    });
+    uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+      /[xy]/g,
+      function (c) {
+        var r = (Math.random() * 16) | 0,
+          v = c === "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      },
+    );
   } while (localStorage.getItem(uuid) !== null);
   return uuid;
+}
+
+function validateUUID(uuid) {
+  const regex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return regex.test(uuid);
+}
+
+function updateChatBoxVisibility() {
+  const welcomeScreen = document.getElementById("welcome-screen");
+  if (document.getElementById("chat-box").innerHTML.trim() === "") {
+    welcomeScreen.classList.add("show");
+    typeText("typing-text", "Hello! How can I assist you today?");
+  } else {
+    welcomeScreen.classList.remove("show");
+  }
+}
+
+function typeText(elementId, text, typingSpeed = 50) {
+  const element = document.getElementById(elementId);
+  let charIndex = 0;
+  element.innerHTML = "";
+
+  function typing() {
+    if (charIndex < text.length) {
+      element.innerHTML += text.charAt(charIndex);
+      charIndex++;
+      setTimeout(typing, typingSpeed);
+    }
+  }
+
+  typing();
 }
 
 function sendPing() {
@@ -93,7 +144,13 @@ function updateCharacterCount() {
   }
 }
 
-function updateHistory(role, parts, updateLast = false, image = null, error = false) {
+function updateHistory(
+  role,
+  parts,
+  updateLast = false,
+  image = null,
+  error = false,
+) {
   let history = getHistory();
   if (
     updateLast &&
@@ -113,7 +170,7 @@ function updateHistory(role, parts, updateLast = false, image = null, error = fa
   }
   if (!currentConversationUUID) {
     currentConversationUUID = generateUUID();
-    console.log('haaaaaaaaaaaa');
+    console.log("haaaaaaaaaaaa");
     window.history.pushState(null, null, `/c/${currentConversationUUID}`);
   }
 
@@ -123,7 +180,7 @@ function updateHistory(role, parts, updateLast = false, image = null, error = fa
   }
 
   localStorage.setItem(currentConversationUUID, JSON.stringify(history));
-  }
+}
 
 function debugLogAllConversations() {
   for (let i = 0; i < localStorage.length; i++) {
@@ -186,7 +243,7 @@ You begin your service now.`,
 
   const history = localStorage.getItem(currentConversationUUID);
   return history ? JSON.parse(history) : defaultConversationStarter;
-  }
+}
 
 function updateConnectionStatus(status) {
   const connectionStatusElement = document.getElementById("connection-status");
@@ -309,6 +366,7 @@ function processAIResponse(message, isError = false) {
   const htmlContent = marked.parse(latestAIMessageElement.fullMessage);
   latestAIMessageElement.innerHTML = htmlContent;
   chatBox.scrollTop = chatBox.scrollHeight;
+  updateChatBoxVisibility();
 }
 
 function sendMessage() {
@@ -354,6 +412,7 @@ function sendMessage() {
   uploadedImage = null;
   ws.send(JSON.stringify(message));
   disableUserInput();
+  updateChatBoxVisibility();
 }
 
 function displayImage(imageUrl) {
@@ -547,15 +606,16 @@ inputField.addEventListener("input", updateCharacterCount);
 
 window.onload = function () {
   const path = window.location.pathname;
-  const pathParts = path.split('/');
+  const pathParts = path.split("/");
 
   if (pathParts.length === 3 && pathParts[1] === "c") {
-    currentConversationUUID = pathParts[2];
-    const history = getHistory();
-    if (history && history.length > 0) {
+    const potentialUUID = pathParts[2];
+    if (validateUUID(potentialUUID) && localStorage.getItem(potentialUUID)) {
+      currentConversationUUID = potentialUUID;
       loadHistory();
     } else {
-      console.log("Conversation not found for UUID:", currentConversationUUID);
+      // Invalid UUID or conversation does not exist - redirect to main page
+      window.location.href = "/";
     }
   } else {
     currentConversationUUID = null;
@@ -563,6 +623,9 @@ window.onload = function () {
   }
 
   updateCharacterCount();
+  updateChatBoxVisibility();
+  setupAnimCanvas();
+  update_anim(0);
 };
 
 function resetConversation() {
@@ -573,7 +636,8 @@ function resetConversation() {
   currentConversationUUID = null;
   latestAIMessageElement = null;
 
-  window.history.pushState(null, null, '/');
+  window.history.pushState(null, null, "/");
+  updateChatBoxVisibility();
 }
 
 newChatButton.addEventListener("click", function () {
@@ -794,4 +858,78 @@ function handleDrop(e) {
 
 function handleFiles(files) {
   [...files].forEach(upload);
+}
+
+anim_canvas.addEventListener("mousemove", (e) => {
+  useSimulatedMouse = false;
+  userMouseX = e.offsetX;
+  userMouseY = e.offsetY;
+});
+
+anim_canvas.addEventListener("mouseleave", () => {
+  useSimulatedMouse = true;
+});
+
+for (let i = 0; i < anim_params.pointsNumber; i++) {
+  anim_trail[i] = {
+    x: anim_canvas.width / 2,
+    y: anim_canvas.height / 2,
+    dx: 0,
+    dy: 0,
+  };
+}
+
+function update_anim(t) {
+let mouseX, mouseY;
+if (useSimulatedMouse) {
+  const radius = anim_canvas.height / 2;
+  const angle = t * 0.002;
+  const centerX = anim_canvas.width / 2;
+  const centerY = anim_canvas.height / 2;
+  mouseX = centerX + radius * Math.sin(angle);
+  mouseY = centerY + radius * Math.cos(angle) * Math.sin(angle);
+} else {
+  mouseX = userMouseX;
+  mouseY = userMouseY;
+}
+
+  ctx.clearRect(0, 0, anim_canvas.width, anim_canvas.height);
+  anim_trail.forEach((p, pIdx) => {
+    const prev =
+      pIdx === 0
+        ? { x: mouseX, y: mouseY }
+        : anim_trail[pIdx - 1];
+    const spring = pIdx === 0 ? 0.4 * anim_params.spring : anim_params.spring;
+    p.dx += (prev.x - p.x) * spring;
+    p.dy += (prev.y - p.y) * spring;
+    p.dx *= anim_params.friction;
+    p.dy *= anim_params.friction;
+    p.x += p.dx;
+    p.y += p.dy;
+  });
+
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(anim_trail[0].x, anim_trail[0].y);
+
+  for (let i = 1; i < anim_trail.length - 1; i++) {
+    const xc = 0.5 * (anim_trail[i].x + anim_trail[i + 1].x);
+    const yc = 0.5 * (anim_trail[i].y + anim_trail[i + 1].y);
+    ctx.quadraticCurveTo(anim_trail[i].x, anim_trail[i].y, xc, yc);
+    ctx.lineWidth = anim_params.widthFactor * (anim_params.pointsNumber - i);
+    ctx.stroke();
+  }
+  ctx.lineTo(
+    anim_trail[anim_trail.length - 1].x,
+    anim_trail[anim_trail.length - 1].y,
+  );
+  ctx.stroke();
+
+  window.requestAnimationFrame(update_anim);
+  ctx.strokeStyle = "#FFFFFF";
+}
+
+function setupAnimCanvas() {
+  anim_canvas.width = anim_canvas.width;
+  anim_canvas.height = anim_canvas.height;
 }

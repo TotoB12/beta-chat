@@ -33,17 +33,30 @@
         <span id="ping-status" class="ping-status">Ping: -- ms</span>
       </div>
       <div id="image-modal" class="image-modal">
-        <img id="fullscreen-image" class="fullscreen-image" src="" alt="Fullscreen Image"/>
+        <img
+          id="fullscreen-image"
+          class="fullscreen-image"
+          src=""
+          alt="Fullscreen Image"
+        />
+      </div>
+      <div id="welcome-screen">
+        <canvas id="animation"></canvas>
+        <p id="typing-text"></p>
       </div>
       <div id="chat-box"></div>
       <div class="input-wrapper" id="drop-zone">
         <div class="upload-preview-container">
-            <button id="upload-button" class="material-symbols-outlined" onclick="document.getElementById('file-input').click()">
-                file_upload
-            </button>
-            <img id="image-preview" class="image-preview" style="display: none;" />
-            <div class="loading-indicator"></div>
-            <div class="close-icon material-symbols-outlined">close</div>
+          <button
+            id="upload-button"
+            class="material-symbols-outlined"
+            onclick="document.getElementById('file-input').click()"
+          >
+            file_upload
+          </button>
+          <img id="image-preview" class="image-preview" style="display: none" />
+          <div class="loading-indicator"></div>
+          <div class="close-icon material-symbols-outlined">close</div>
         </div>
         <input
           type="file"

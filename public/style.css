@@ -432,6 +432,54 @@ display: block;
   object-fit: contain;
 }
 
+#welcome-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    z-index: 100;
+    transition: opacity 0.5s ease-in-out;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#welcome-screen.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#welcome-screen canvas,
+#welcome-screen .welcome-text {
+    margin: 10px 0;
+}
+
+#welcome-screen #typing-text {
+    font-size: 20px;
+    color: #fff;
+    margin-top: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    border-right: .15em solid;
+    animation: blinking-cursor 1s step-end infinite;
+}
+
+@keyframes blinking-cursor {
+    from { border-right-color: transparent; }
+    to { border-right-color: inherit; }
+}
+
+/* #animation {
+  height: 140px;
+  width: 350px;
+} */
+
 .flex {
     display: flex;
 }
