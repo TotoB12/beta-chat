@@ -134,8 +134,8 @@ async function composeMessageForAI(messageData) {
 
     if (wasMessageBlocked) {
       const placeholder = entry.image 
-                          ? "[message and image removed for safety]" 
-                          : "[message removed for safety]";
+                          ? "\n\nUser: [message and image removed for safety]" 
+                          : "\n\nUser: [message removed for safety]";
       parts.push(placeholder);
       consoleOutput += "\n" + placeholder;
       continue;
@@ -195,7 +195,7 @@ async function urlToGenerativePart(
       };
     } else {
       hasImage = null;
-      return "[image removed for safety]";
+      return "\n\nUser: [image removed for safety]";
     }
   } catch (error) {
     if (error.message.includes("429") && retryCount < 3) {
