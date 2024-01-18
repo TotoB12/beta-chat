@@ -35,9 +35,9 @@ const safetySettings = [
 const generationConfig = {
   stopSequences: ["red"],
   maxOutputTokens: 200,
-  temperature: 0.9,
-  topP: 0.1,
-  topK: 16,
+  temperature: 0.17,
+  // topP: 0.1,
+  // topK: 16,
 };
 
 let hasImage;
