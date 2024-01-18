@@ -34,8 +34,8 @@ const safetySettings = [
 ];
 const generationConfig = {
   stopSequences: ["red"],
-  maxOutputTokens: 200,
   temperature: 0.17,
+  // maxOutputTokens: 200,
   // topP: 0.1,
   // topK: 16,
 };
