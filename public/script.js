@@ -365,6 +365,7 @@ ws.onmessage = function (event) {
     }
   } catch (e) {
     processAIResponse(event.data);
+    hljs.highlightAll();
   }
 };
 
@@ -688,6 +689,7 @@ window.onload = function () {
   setupAnimCanvas();
   update_anim(0);
     updateMenuWithConversations();
+  hljs.highlightAll();
 };
 
 function resetConversation() {

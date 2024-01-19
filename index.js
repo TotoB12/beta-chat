@@ -71,7 +71,7 @@ wss.on("connection", function connection(ws) {
 
 
       const promptParts = await composeMessageForAI(messageData);
-      console.log(promptParts);
+      // console.log(promptParts);
 
       const model = hasImage
         ? genAI.getGenerativeModel({
@@ -89,7 +89,7 @@ wss.on("connection", function connection(ws) {
 
       for await (const chunk of result.stream) {
         ws.send(chunk.text());
-        console.log(chunk.text());
+        // console.log(chunk.text());
       }
 
       ws.send(
