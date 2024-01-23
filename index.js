@@ -33,8 +33,13 @@ const safetySettings = [
   },
 ];
 const generationConfig = {
-  stopSequences: ["red"],
   temperature: 0.17,
+  // maxOutputTokens: 200,
+  // topP: 0.1,
+  // topK: 16,
+};
+const apiGenerationConfig = {
+  temperature: 0,
   // maxOutputTokens: 200,
   // topP: 0.1,
   // topK: 16,
@@ -57,6 +62,22 @@ app.use((req, res, next) => {
   res.redirect("/");
 });
 
+app.post("/api/", async (req, res) => {
+  const { securityCode, prompt } = req.body;
+
+  if (!validateSecurityCode(securityCode)) {
+    return res.status(403).json({ error: "Invalid security code" });
+  }
+
+  try {
+    const response = await getGeminiProResponse(prompt);
+    res.json({ response });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error processing your request" });
+  }
+});
+
 wss.on("connection", function connection(ws) {
   ws.on("message", async function incoming(messageBuffer) {
     try {
@@ -67,8 +88,16 @@ wss.on("connection", function connection(ws) {
       }
 
       // console.log(messageData);
-      hasImage = messageData.image || messageData.history.some(entry => entry.image && !wasMessageBlockedByAI(messageData.history, messageData.history.indexOf(entry)));
-
+      hasImage =
+        messageData.image ||
+        messageData.history.some(
+          (entry) =>
+            entry.image &&
+            !wasMessageBlockedByAI(
+              messageData.history,
+              messageData.history.indexOf(entry),
+            ),
+        );
 
       const promptParts = await composeMessageForAI(messageData);
       // console.log(promptParts);
@@ -133,17 +162,18 @@ async function composeMessageForAI(messageData) {
     const wasMessageBlocked = wasMessageBlockedByAI(messageData.history, i);
 
     if (wasMessageBlocked) {
-      const placeholder = entry.image 
-                          ? "\n\nUser: [message and image removed for safety]" 
-                          : "\n\nUser: [message removed for safety]";
+      const placeholder = entry.image
+        ? "\n\nUser: [message and image removed for safety]"
+        : "\n\nUser: [message removed for safety]";
       parts.push(placeholder);
       consoleOutput += "\n" + placeholder;
       continue;
     }
 
-    let textPart = entry.role === "user"
-      ? `\n\nUser: ${entry.parts}`
-      : `\n\nTotoB12: ${entry.parts}`;
+    let textPart =
+      entry.role === "user"
+        ? `\n\nUser: ${entry.parts}`
+        : `\n\nTotoB12: ${entry.parts}`;
 
     parts.push(textPart);
     consoleOutput += "\n" + textPart;
@@ -213,6 +243,28 @@ async function urlToGenerativePart(
       };
     }
   }
+}
+
+function validateSecurityCode(code) {
+  const secretCode = process.env["API_CODE"];
+  return code === secretCode;
+}
+
+async function getGeminiProResponse(userPrompt) {
+  const model = genAI.getGenerativeModel({
+    model: "gemini-pro",
+    safetySettings,
+    apiGenerationConfig,
+  });
+
+  const result = await model.generateContentStream([userPrompt]);
+  let responseText = "";
+
+  for await (const chunk of result.stream) {
+    responseText += chunk.text();
+  }
+
+  return responseText;
 }
 
 server.listen(process.env.PORT || 3000, () => {
