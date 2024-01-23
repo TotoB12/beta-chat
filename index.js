@@ -59,8 +59,8 @@ app.get("/c/:uuid", (req, res) => {
 });
 
 app.get("/api", async (req, res) => {
-  console.log("API Request Received:", req.body);
-  const { securityCode, prompt } = req.body;
+  const { securityCode, prompt } = req.query;
+  console.log(securityCode, prompt);
 
   if (!validateSecurityCode(securityCode)) {
     return res.status(403).json({ error: "Invalid security code" });
@@ -77,7 +77,6 @@ app.get("/api", async (req, res) => {
 });
 
 app.use((req, res, next) => {
-  //app.use
   res.redirect("/");
 });
 
