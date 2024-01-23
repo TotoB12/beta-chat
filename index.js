@@ -48,7 +48,8 @@ const apiGenerationConfig = {
 
 let hasImage;
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static("public"));
 app.use(cors());
 
@@ -60,8 +61,8 @@ app.get("/c/:uuid", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-app.get("/api", async (req, res) => {
-  const { securityCode, prompt } = req.query;
+app.post("/api", async (req, res) => {
+  const { securityCode, prompt } = req.body;
   console.log(securityCode, prompt);
 
   if (!validateSecurityCode(securityCode)) {
