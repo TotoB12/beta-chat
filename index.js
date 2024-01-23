@@ -58,10 +58,6 @@ app.get("/c/:uuid", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-app.use((req, res, next) => {
-  res.redirect("/");
-});
-
 app.post("/api", async (req, res) => {
   const { securityCode, prompt } = req.body;
 
@@ -77,6 +73,10 @@ app.post("/api", async (req, res) => {
     console.error(error);
     res.status(500).json({ error: "Error processing your request" });
   }
+});
+
+app.use((req, res, next) => {
+  res.redirect("/");
 });
 
 wss.on("connection", function connection(ws) {
