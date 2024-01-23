@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const http = require("http");
 const fetch = require("node-fetch");
+const cors = require('cors');
 const WebSocket = require("ws");
 const bodyParser = require("body-parser");
 const {
@@ -49,6 +50,7 @@ let hasImage;
 
 app.use(bodyParser.json());
 app.use(express.static("public"));
+app.use(cors());
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
