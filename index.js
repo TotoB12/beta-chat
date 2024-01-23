@@ -58,7 +58,7 @@ app.get("/c/:uuid", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-app.post("/api", async (req, res) => {
+app.get("/api", async (req, res) => {
   console.log("API Request Received:", req.body);
   const { securityCode, prompt } = req.body;
 
@@ -76,7 +76,8 @@ app.post("/api", async (req, res) => {
   }
 });
 
-app.get((req, res, next) => { //app.use
+app.use((req, res, next) => {
+  //app.use
   res.redirect("/");
 });
 
