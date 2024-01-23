@@ -62,7 +62,7 @@ app.use((req, res, next) => {
   res.redirect("/");
 });
 
-app.post("/api/", async (req, res) => {
+app.post("/api", async (req, res) => {
   const { securityCode, prompt } = req.body;
 
   if (!validateSecurityCode(securityCode)) {
@@ -70,6 +70,7 @@ app.post("/api/", async (req, res) => {
   }
 
   try {
+    console.log(prompt);
     const response = await getGeminiProResponse(prompt);
     res.json({ response });
   } catch (error) {
