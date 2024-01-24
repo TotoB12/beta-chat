@@ -29,6 +29,9 @@ let useSimulatedMouse = true;
 let userMouseX = 0;
 let userMouseY = 0;
 
+let ws;
+let pingInterval;
+
 function generateUUID() {
   let uuid;
   do {
@@ -76,12 +79,24 @@ function typeText(elementId, text, typingSpeed = 50) {
   typing();
 }
 
-function sendPing() {
-  lastPingTimestamp = Date.now();
-  ws.send(JSON.stringify({ type: "ping" }));
+function startHeartbeat() {
+    pingInterval = setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            sendPing();
+        }
+    }, 5000);
 }
 
-let ws = new WebSocket(`wss://${window.location.host}`);
+function stopHeartbeat() {
+    clearInterval(pingInterval);
+}
+
+function sendPing() {
+    lastPingTimestamp = Date.now();
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "ping" }));
+    }
+}
 
 function loadHistory() {
   const history = getHistory();
@@ -303,18 +318,14 @@ function loadConversation(uuid) {
 }
 
 function updateConnectionStatus(status) {
-  const connectionStatusElement = document.getElementById("connection-status");
-  const pingStatusElement = document.getElementById("ping-status");
-
-  if (status === "online") {
-    connectionStatusElement.innerHTML = "Status: 🟢 Online";
-  } else if (status === "offline") {
-    connectionStatusElement.innerHTML = "Status: 🔴 Offline, Please Refresh";
-    pingStatusElement.innerHTML = "Ping: -- ms";
-  } else {
-    connectionStatusElement.innerHTML = "Status: 🔴 Error, Please Refresh";
-    pingStatusElement.innerHTML = "Ping: -- ms";
-  }
+    const connectionStatusElement = document.getElementById("connection-status");
+    if (status === "online") {
+        connectionStatusElement.innerHTML = "Status: 🟢 Online";
+    } else if (status === "offline") {
+        connectionStatusElement.innerHTML = "Status: 🔴 Offline";
+    } else {
+        connectionStatusElement.innerHTML = "Status: 🔴 Error";
+    }
 }
 
 function simulateButtonHover() {
@@ -325,16 +336,8 @@ function simulateButtonHover() {
   }, 150);
 }
 
-ws.onopen = function () {
-  sendPing();
-  updateConnectionStatus("online");
-  sendButton.addEventListener("click", sendMessage);
-  enableUserInput();
-
-  updateConnectionStatus("online");
-};
-
 window.onload = function () {
+  startWebSocket();
   const path = window.location.pathname;
   const pathParts = path.split("/");
 
@@ -358,62 +361,65 @@ window.onload = function () {
   updateMenuWithConversations();
 };
 
-ws.onclose = function () {
-  updateConnectionStatus("offline");
-};
+function startWebSocket() {
+    ws = new WebSocket(`wss://${window.location.host}`);
 
-ws.onerror = function () {
-  updateConnectionStatus("offline");
-};
-
-ws.onmessage = function (event) {
-  try {
-    const data = JSON.parse(event.data);
-
-    if (data.type === "pong") {
-      const latency = Date.now() - lastPingTimestamp;
-      updatePingDisplay(latency);
-    }
-
-    if (data.type === "error") {
-      processAIResponse(data.text, true);
-    }
-
-    if (data.type === "AI_COMPLETE" && data.uniqueIdentifier === "7777") {
-      if (
-        latestAIMessageElement &&
-        latestAIMessageElement.fullMessage.trim() !== ""
-      ) {
-        updateHistory("model", latestAIMessageElement.fullMessage.trim(), true);
-      }
+    ws.onopen = function () {
+        console.log('WebSocket Connected');
+        updateConnectionStatus("online");
+        sendPing();
+      sendButton.addEventListener("click", sendMessage);
       enableUserInput();
-      return;
+        startHeartbeat();
+    };
+
+  ws.onmessage = function (event) {
+    try {
+      const data = JSON.parse(event.data);
+
+      if (data.type === "pong") {
+        const latency = Date.now() - lastPingTimestamp;
+        updatePingDisplay(latency);
+      }
+
+      if (data.type === "error") {
+        processAIResponse(data.text, true);
+      }
+
+      if (data.type === "AI_COMPLETE" && data.uniqueIdentifier === "7777") {
+        if (
+          latestAIMessageElement &&
+          latestAIMessageElement.fullMessage.trim() !== ""
+        ) {
+          updateHistory("model", latestAIMessageElement.fullMessage.trim(), true);
+        }
+        enableUserInput();
+        return;
+      }
+    } catch (e) {
+      processAIResponse(event.data);
+      hljs.highlightAll();
     }
-  } catch (e) {
-    processAIResponse(event.data);
-    hljs.highlightAll();
-  }
-};
+  };
+
+  ws.onclose = function () {
+      console.log('WebSocket Disconnected');
+      updateConnectionStatus("offline");
+      updatePingDisplay("--");
+      stopHeartbeat();
+      setTimeout(startWebSocket, 2000);
+  };
+
+    ws.onerror = function (error) {
+        console.error('WebSocket Error:', error);
+        updateConnectionStatus("error");
+    };
+}
 
 function updatePingDisplay(latency) {
-  document.getElementById("ping-status").innerHTML = `Ping: ${latency} ms`;
+    const pingStatusElement = document.getElementById("ping-status");
+    pingStatusElement.innerHTML = `Ping: ${latency} ms`;
 }
-
-function checkNetworkStatus() {
-  if (navigator.onLine) {
-    if (ws.readyState === WebSocket.OPEN) {
-      sendPing();
-      updateConnectionStatus("online");
-    } else {
-      ws = new WebSocket(`wss://${window.location.host}`);
-      updateConnectionStatus("offline");
-    }
-  } else {
-    updateConnectionStatus("offline");
-  }
-}
-
-setInterval(checkNetworkStatus, 5000);
 
 function processAIResponse(message, isError = false) {
   if (!latestAIMessageElement) {
@@ -875,7 +881,7 @@ function displayNotification(message, type) {
   notificationArea.style.display = "block";
   setTimeout(() => {
     notificationArea.style.display = "none";
-  }, 5000);
+  }, 2000);
 }
 
 const dropZone = document.getElementById("drop-zone");
