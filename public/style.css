@@ -502,3 +502,32 @@ display: block;
 .align-items-center {
     align-items: center;
 }
+
+.code-wrapper {
+  position: relative;
+  margin: 10px 0;
+}
+
+.language-bar {
+  background-color: #333;
+  color: #fff;
+  padding: 5px 10px;
+  font-size: 0.9em;
+}
+
+.copy-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+
+.copy-button:hover {
+  background-color: #45a049;
+}

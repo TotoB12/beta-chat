@@ -94,9 +94,8 @@ function loadHistory() {
     if (entry.role === "user") {
       label.textContent = "You";
       chatBox.appendChild(label);
-      chatBox.innerHTML += `<div class="message user-message">${entry.parts.replace(
-        /\n/g,
-        "<br>",
+      chatBox.innerHTML += `<div class="message user-message">${marked.parse(
+        entry.parts,
       )}</div>`;
 
       if (entry.image) {
@@ -115,11 +114,13 @@ function loadHistory() {
     }
   }
   chatBox.scrollTop = chatBox.scrollHeight;
+  wrapCodeElements();
+  hljs.highlightAll();
 }
 
 function checkImageInHistory() {
   const history = getHistory();
-  return history.some(entry => entry.image);
+  return history.some((entry) => entry.image);
 }
 
 function updateCharacterCount() {
@@ -255,49 +256,50 @@ You begin your service now.`,
 }
 
 function updateMenuWithConversations() {
-    const menu = document.getElementById("menu");
-    const resetButton = menu.querySelector('#newChatButton');
-    menu.innerHTML = '';
-    menu.appendChild(resetButton);
+  const menu = document.getElementById("menu");
+  const resetButton = menu.querySelector("#newChatButton");
+  menu.innerHTML = "";
+  menu.appendChild(resetButton);
 
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key.includes("-")) {
-            const conversation = JSON.parse(localStorage.getItem(key));
-            const fourthMessage = conversation[3]?.parts || "New Conversation";
-            const truncatedTitle = fourthMessage.length > 100 
-                                   ? fourthMessage.substring(0, 100) + "..." 
-                                   : fourthMessage;
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.includes("-")) {
+      const conversation = JSON.parse(localStorage.getItem(key));
+      const fourthMessage = conversation[3]?.parts || "New Conversation";
+      const truncatedTitle =
+        fourthMessage.length > 100
+          ? fourthMessage.substring(0, 100) + "..."
+          : fourthMessage;
 
-            const menuItem = document.createElement("li");
-            menuItem.textContent = truncatedTitle;
-            menuItem.style.whiteSpace = "nowrap";
-            menuItem.style.overflow = "hidden";
-            menuItem.style.textOverflow = "ellipsis";
-            menuItem.onclick = () => loadConversation(key);
-            menu.appendChild(menuItem);
-        }
+      const menuItem = document.createElement("li");
+      menuItem.textContent = truncatedTitle;
+      menuItem.style.whiteSpace = "nowrap";
+      menuItem.style.overflow = "hidden";
+      menuItem.style.textOverflow = "ellipsis";
+      menuItem.onclick = () => loadConversation(key);
+      menu.appendChild(menuItem);
     }
+  }
 }
 
 function loadConversation(uuid) {
-    if (!validateUUID(uuid)) {
-        console.error("Invalid UUID:", uuid);
-        return;
-    }
+  if (!validateUUID(uuid)) {
+    console.error("Invalid UUID:", uuid);
+    return;
+  }
 
-    currentConversationUUID = uuid;
-    document.getElementById("chat-box").innerHTML = "";
-    loadHistory();
-    window.history.pushState(null, null, `/c/${uuid}`);
-    updateMenuWithConversations();
+  currentConversationUUID = uuid;
+  document.getElementById("chat-box").innerHTML = "";
+  loadHistory();
+  window.history.pushState(null, null, `/c/${uuid}`);
+  updateMenuWithConversations();
 
-    const menuToggleCheckbox = document.querySelector("#menuToggle input");
-    if (menuToggleCheckbox.checked) {
-        menuToggleCheckbox.click();
-    }
+  const menuToggleCheckbox = document.querySelector("#menuToggle input");
+  if (menuToggleCheckbox.checked) {
+    menuToggleCheckbox.click();
+  }
 
-    updateChatBoxVisibility();
+  updateChatBoxVisibility();
 }
 
 function updateConnectionStatus(status) {
@@ -330,6 +332,30 @@ ws.onopen = function () {
   enableUserInput();
 
   updateConnectionStatus("online");
+};
+
+window.onload = function () {
+  const path = window.location.pathname;
+  const pathParts = path.split("/");
+
+  if (pathParts.length === 3 && pathParts[1] === "c") {
+    const potentialUUID = pathParts[2];
+    if (validateUUID(potentialUUID) && localStorage.getItem(potentialUUID)) {
+      currentConversationUUID = potentialUUID;
+      loadHistory();
+    } else {
+      window.location.href = "/";
+    }
+  } else {
+    currentConversationUUID = null;
+    loadHistory();
+  }
+
+  updateCharacterCount();
+  updateChatBoxVisibility();
+  setupAnimCanvas();
+  update_anim(0);
+  updateMenuWithConversations();
 };
 
 ws.onclose = function () {
@@ -421,62 +447,63 @@ function processAIResponse(message, isError = false) {
 
   const htmlContent = marked.parse(latestAIMessageElement.fullMessage);
   latestAIMessageElement.innerHTML = htmlContent;
+  wrapCodeElements();
   chatBox.scrollTop = chatBox.scrollHeight;
   updateChatBoxVisibility();
 }
 
 function sendMessage() {
-    const userText = inputField.value.trim();
-    if (userText.length > 60000) {
-        alert("Character limit exceeded. Please shorten your message.");
-        return;
-    }
-    if (userText === "" || isAIResponding) return;
+  const userText = inputField.value.trim();
+  if (userText.length > 60000) {
+    alert("Character limit exceeded. Please shorten your message.");
+    return;
+  }
+  if (userText === "" || isAIResponding) return;
 
-    const message = {
-        type: "user-message",
-        history: getHistory(),
-        text: userText,
-        image: uploadedImage,
-    };
+  const message = {
+    type: "user-message",
+    history: getHistory(),
+    text: userText,
+    image: uploadedImage,
+  };
 
-    updateHistory("user", userText, false, uploadedImage);
+  updateHistory("user", userText, false, uploadedImage);
 
-    const userLabel = document.createElement("div");
-    userLabel.className = "message-label";
-    userLabel.textContent = "You";
-    chatBox.appendChild(userLabel);
-    chatBox.innerHTML += `<div class="message user-message">${userText.replace(
-        /\n/g,
-        "<br>",
-    )}</div>`;
+  const userLabel = document.createElement("div");
+  userLabel.className = "message-label";
+  userLabel.textContent = "You";
+  chatBox.appendChild(userLabel);
+  chatBox.innerHTML += `<div class="message user-message">${marked.parse(
+    userText,
+  )}</div>`;
 
-    if (uploadedImageUrl) {
-        displayImage(uploadedImageUrl);
-    }
-
-    if (!currentConversationUUID) {
-        currentConversationUUID = generateUUID();
-        updateHistory("user", userText, false, uploadedImage);
-        isNewConversation = true; 
-    }
-
-  if (isNewConversation) {
-      updateMenuWithConversations();
-      updateChatBoxVisibility();
-      isNewConversation = false;
+  if (uploadedImageUrl) {
+    displayImage(uploadedImageUrl);
   }
 
-    inputField.value = "";
-    resetTextarea();
-    resetUploadButton();
-    latestAIMessageElement = null;
-    uploadedImageUrl = null;
-    uploadedImage = null;
-    ws.send(JSON.stringify(message));
-    disableUserInput();
-}
+  if (!currentConversationUUID) {
+    currentConversationUUID = generateUUID();
+    updateHistory("user", userText, false, uploadedImage);
+    isNewConversation = true;
+  }
 
+  if (isNewConversation) {
+    updateMenuWithConversations();
+    updateChatBoxVisibility();
+    isNewConversation = false;
+  }
+
+  inputField.value = "";
+  resetTextarea();
+  resetUploadButton();
+  latestAIMessageElement = null;
+  uploadedImageUrl = null;
+  uploadedImage = null;
+  ws.send(JSON.stringify(message));
+  disableUserInput();
+  hljs.highlightAll();
+  wrapCodeElements();
+}
 
 function displayImage(imageUrl) {
   const smallThumbnailUrl = imageUrl.replace(/(\.[\w\d_-]+)$/i, "t$1");
@@ -667,31 +694,6 @@ function resetTextarea() {
 inputField.addEventListener("input", resizeTextarea);
 inputField.addEventListener("input", updateCharacterCount);
 
-window.onload = function () {
-  const path = window.location.pathname;
-  const pathParts = path.split("/");
-
-  if (pathParts.length === 3 && pathParts[1] === "c") {
-    const potentialUUID = pathParts[2];
-    if (validateUUID(potentialUUID) && localStorage.getItem(potentialUUID)) {
-      currentConversationUUID = potentialUUID;
-      loadHistory();
-    } else {
-      window.location.href = "/";
-    }
-  } else {
-    currentConversationUUID = null;
-    loadHistory();
-  }
-
-  updateCharacterCount();
-  updateChatBoxVisibility();
-  setupAnimCanvas();
-  update_anim(0);
-    updateMenuWithConversations();
-  hljs.highlightAll();
-};
-
 function resetConversation() {
   uploadedImageUrl = null;
   uploadedImage = null;
@@ -703,7 +705,7 @@ function resetConversation() {
   window.history.pushState(null, null, "/");
   updateMenuWithConversations();
   updateChatBoxVisibility();
-  }
+}
 
 newChatButton.addEventListener("click", function () {
   resetConversation();
@@ -846,7 +848,7 @@ document.getElementById("file-input").addEventListener("change", function () {
       upload(file);
     } else {
       displayNotification(
-        "Invalid file. Please select an image (PNG, JPEG, WEBP, HEIC, HEIF) under 3MB.",
+        "Invalid file. Please select an image (PNG, JPEG, WEBM, HEIC, HEIF) under 3MB.",
         "error",
       );
     }
@@ -856,8 +858,9 @@ document.getElementById("file-input").addEventListener("change", function () {
 function validateFile(file) {
   const validTypes = [
     "image/png",
+    "image/apng",
     "image/jpeg",
-    "image/webp",
+    "image/webm",
     "image/heic",
     "image/heif",
   ];
@@ -915,7 +918,7 @@ function handleDrop(e) {
       upload(file);
     } else {
       displayNotification(
-        "Invalid file. Please select an image (PNG, JPEG, WEBP, HEIC, HEIF) under 3MB.",
+        "Invalid file. Please select an image (PNG, JPEG, WEBM, HEIC, HEIF) under 3MB.",
         "error",
       );
     }
@@ -946,25 +949,22 @@ for (let i = 0; i < anim_params.pointsNumber; i++) {
 }
 
 function update_anim(t) {
-let mouseX, mouseY;
-if (useSimulatedMouse) {
-  const radius = anim_canvas.height / 2;
-  const angle = t * 0.002;
-  const centerX = anim_canvas.width / 2;
-  const centerY = anim_canvas.height / 2;
-  mouseX = centerX + radius * Math.sin(angle);
-  mouseY = centerY + radius * Math.cos(angle) * Math.sin(angle);
-} else {
-  mouseX = userMouseX;
-  mouseY = userMouseY;
-}
+  let mouseX, mouseY;
+  if (useSimulatedMouse) {
+    const radius = anim_canvas.height / 2;
+    const angle = t * 0.002;
+    const centerX = anim_canvas.width / 2;
+    const centerY = anim_canvas.height / 2;
+    mouseX = centerX + radius * Math.sin(angle);
+    mouseY = centerY + radius * Math.cos(angle) * Math.sin(angle);
+  } else {
+    mouseX = userMouseX;
+    mouseY = userMouseY;
+  }
 
   ctx.clearRect(0, 0, anim_canvas.width, anim_canvas.height);
   anim_trail.forEach((p, pIdx) => {
-    const prev =
-      pIdx === 0
-        ? { x: mouseX, y: mouseY }
-        : anim_trail[pIdx - 1];
+    const prev = pIdx === 0 ? { x: mouseX, y: mouseY } : anim_trail[pIdx - 1];
     const spring = pIdx === 0 ? 0.4 * anim_params.spring : anim_params.spring;
     p.dx += (prev.x - p.x) * spring;
     p.dy += (prev.y - p.y) * spring;
@@ -998,4 +998,38 @@ if (useSimulatedMouse) {
 function setupAnimCanvas() {
   anim_canvas.width = anim_canvas.width;
   anim_canvas.height = anim_canvas.height;
+}
+
+function wrapCodeElements() {
+  const codeElements = document.querySelectorAll("code");
+  codeElements.forEach((codeElement) => {
+    // Check if the code element has a language class and is not already processed
+    if (!codeElement.className.includes("language-") || codeElement.closest('.code-wrapper')) {
+      return;
+    }
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "code-wrapper";
+
+    // Extract the language from the class name using regular expression
+    const languageMatch = codeElement.className.match(/language-(\w+)/);
+    const language = languageMatch ? languageMatch[1] : "unknown";
+
+    const languageBar = document.createElement("div");
+    languageBar.className = "language-bar";
+    languageBar.textContent = language;
+
+    const copyButton = document.createElement("button");
+    copyButton.className = "copy-button";
+    copyButton.textContent = "Copy";
+    copyButton.onclick = () => {
+      navigator.clipboard.writeText(codeElement.textContent);
+      alert("Code copied to clipboard!");
+    };
+
+    wrapper.appendChild(languageBar);
+    wrapper.appendChild(copyButton);
+    codeElement.parentNode.insertBefore(wrapper, codeElement);
+    wrapper.appendChild(codeElement);
+  });
 }
