@@ -503,31 +503,46 @@ display: block;
     align-items: center;
 }
 
+code.hljs {
+  border-radius: 0 0 4px 4px;
+}
+
 .code-wrapper {
   position: relative;
   margin: 10px 0;
 }
 
+.code-wrapper .language-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .language-bar {
-  background-color: #333;
+  background-color: #888; /* #282c34 */
   color: #fff;
-  padding: 5px 10px;
+  border-radius: 4px 4px 0 0;
+  padding: 5px 15px; /* 5px 10px */
   font-size: 0.9em;
 }
 
 .copy-button {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
+  font-family: 'PolySans', Arial, sans-serif;
   cursor: pointer;
-  padding: 5px 10px;
-  border-radius: 5px;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
   font-size: 0.9em;
+  padding: 2px;
 }
 
-.copy-button:hover {
-  background-color: #45a049;
+.copy-button .material-symbols-outlined {
+  font-size: 1em;
+  margin-right: 5px;
 }
+
+.code-wrapper .language-bar .copy-button {
+  cursor: pointer;
+}
+

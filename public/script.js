@@ -80,22 +80,22 @@ function typeText(elementId, text, typingSpeed = 50) {
 }
 
 function startHeartbeat() {
-    pingInterval = setInterval(() => {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            sendPing();
-        }
-    }, 5000);
+  pingInterval = setInterval(() => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      sendPing();
+    }
+  }, 5000);
 }
 
 function stopHeartbeat() {
-    clearInterval(pingInterval);
+  clearInterval(pingInterval);
 }
 
 function sendPing() {
-    lastPingTimestamp = Date.now();
-    if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: "ping" }));
-    }
+  lastPingTimestamp = Date.now();
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: "ping" }));
+  }
 }
 
 function loadHistory() {
@@ -318,14 +318,14 @@ function loadConversation(uuid) {
 }
 
 function updateConnectionStatus(status) {
-    const connectionStatusElement = document.getElementById("connection-status");
-    if (status === "online") {
-        connectionStatusElement.innerHTML = "Status: 🟢 Online";
-    } else if (status === "offline") {
-        connectionStatusElement.innerHTML = "Status: 🔴 Offline";
-    } else {
-        connectionStatusElement.innerHTML = "Status: 🔴 Error";
-    }
+  const connectionStatusElement = document.getElementById("connection-status");
+  if (status === "online") {
+    connectionStatusElement.innerHTML = "Status: 🟢 Online";
+  } else if (status === "offline") {
+    connectionStatusElement.innerHTML = "Status: 🔴 Offline";
+  } else {
+    connectionStatusElement.innerHTML = "Status: 🔴 Error";
+  }
 }
 
 function simulateButtonHover() {
@@ -362,16 +362,16 @@ window.onload = function () {
 };
 
 function startWebSocket() {
-    ws = new WebSocket(`wss://${window.location.host}`);
+  ws = new WebSocket(`wss://${window.location.host}`);
 
-    ws.onopen = function () {
-        console.log('WebSocket Connected');
-        updateConnectionStatus("online");
-        sendPing();
-      sendButton.addEventListener("click", sendMessage);
-      enableUserInput();
-        startHeartbeat();
-    };
+  ws.onopen = function () {
+    console.log("WebSocket Connected");
+    updateConnectionStatus("online");
+    sendPing();
+    sendButton.addEventListener("click", sendMessage);
+    enableUserInput();
+    startHeartbeat();
+  };
 
   ws.onmessage = function (event) {
     try {
@@ -391,7 +391,11 @@ function startWebSocket() {
           latestAIMessageElement &&
           latestAIMessageElement.fullMessage.trim() !== ""
         ) {
-          updateHistory("model", latestAIMessageElement.fullMessage.trim(), true);
+          updateHistory(
+            "model",
+            latestAIMessageElement.fullMessage.trim(),
+            true,
+          );
         }
         enableUserInput();
         return;
@@ -403,22 +407,22 @@ function startWebSocket() {
   };
 
   ws.onclose = function () {
-      console.log('WebSocket Disconnected');
-      updateConnectionStatus("offline");
-      updatePingDisplay("--");
-      stopHeartbeat();
-      setTimeout(startWebSocket, 2000);
+    console.log("WebSocket Disconnected");
+    updateConnectionStatus("offline");
+    updatePingDisplay("--");
+    stopHeartbeat();
+    setTimeout(startWebSocket, 2000);
   };
 
-    ws.onerror = function (error) {
-        console.error('WebSocket Error:', error);
-        updateConnectionStatus("error");
-    };
+  ws.onerror = function (error) {
+    console.error("WebSocket Error:", error);
+    updateConnectionStatus("error");
+  };
 }
 
 function updatePingDisplay(latency) {
-    const pingStatusElement = document.getElementById("ping-status");
-    pingStatusElement.innerHTML = `Ping: ${latency} ms`;
+  const pingStatusElement = document.getElementById("ping-status");
+  pingStatusElement.innerHTML = `Ping: ${latency} ms`;
 }
 
 function processAIResponse(message, isError = false) {
@@ -1009,33 +1013,53 @@ function setupAnimCanvas() {
 function wrapCodeElements() {
   const codeElements = document.querySelectorAll("code");
   codeElements.forEach((codeElement) => {
-    // Check if the code element has a language class and is not already processed
-    if (!codeElement.className.includes("language-") || codeElement.closest('.code-wrapper')) {
+    if (
+      !codeElement.className.includes("language-") ||
+      codeElement.closest(".code-wrapper")
+    ) {
       return;
     }
 
     const wrapper = document.createElement("div");
     wrapper.className = "code-wrapper";
 
-    // Extract the language from the class name using regular expression
     const languageMatch = codeElement.className.match(/language-(\w+)/);
     const language = languageMatch ? languageMatch[1] : "unknown";
 
     const languageBar = document.createElement("div");
     languageBar.className = "language-bar";
-    languageBar.textContent = language;
 
-    const copyButton = document.createElement("button");
+    const languageText = document.createElement("span");
+    languageText.textContent = language;
+    languageBar.appendChild(languageText);
+
+    const copyButton = document.createElement("span");
     copyButton.className = "copy-button";
-    copyButton.textContent = "Copy";
     copyButton.onclick = () => {
       navigator.clipboard.writeText(codeElement.textContent);
-      alert("Code copied to clipboard!");
+      copyIcon.textContent = "check";
+      copyText.textContent = "Copied!";
+
+      setTimeout(() => {
+        copyIcon.textContent = "content_copy";
+        copyText.textContent = "Copy code";
+      }, 2000);
     };
 
+    const copyIcon = document.createElement("span");
+    copyIcon.className = "material-symbols-outlined";
+    copyIcon.textContent = "content_copy";
+
+    const copyText = document.createElement("span");
+    copyText.textContent = "Copy code";
+
+    copyButton.appendChild(copyIcon);
+    copyButton.appendChild(copyText);
+
+    languageBar.appendChild(copyButton);
     wrapper.appendChild(languageBar);
-    wrapper.appendChild(copyButton);
     codeElement.parentNode.insertBefore(wrapper, codeElement);
     wrapper.appendChild(codeElement);
   });
 }
+
