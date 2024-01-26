@@ -1,0 +1,11 @@
+{
+  "name": "Node.js",
+  "settings": { 
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  "extensions": [
+    "dbaeumer.vscode-eslint"
+  ],
+  "postCreateCommand": "npm install && npm run start",
+  "forwardPorts": [3000]
+}
