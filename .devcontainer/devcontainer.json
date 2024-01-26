@@ -6,6 +6,6 @@
   "extensions": [
     "dbaeumer.vscode-eslint"
   ],
-  "postCreateCommand": "npm install && npm run start",
+  "postCreateCommand": "source .env && npm install && npm run start",
   "forwardPorts": [3000]
 }
