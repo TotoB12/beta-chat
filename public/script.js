@@ -15,6 +15,7 @@ let lastPingTimestamp;
 let currentUploadXHR = null;
 let currentConversationUUID = null;
 let isNewConversation = false;
+const main_color = "#eee";
 
 const anim_canvas = document.getElementById("animation");
 const ctx = anim_canvas.getContext("2d");
@@ -164,8 +165,8 @@ function updateCharacterCount() {
     hrElement.style.borderColor = "red";
     inputField.value = inputField.value.substring(0, charLimit);
   } else {
-    charCountElement.style.color = "white";
-    hrElement.style.borderColor = "white";
+    charCountElement.style.color = main_color;
+    hrElement.style.borderColor = main_color;
   }
 
   if (charCount > 300) {
@@ -285,9 +286,12 @@ function updateMenuWithConversations() {
   menu.innerHTML = "";
   menu.appendChild(resetButton);
 
+  let hasConversations = false;
+
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key.includes("-")) {
+      hasConversations = true;
       const conversation = JSON.parse(localStorage.getItem(key));
       const fourthMessage = conversation[3]?.parts || "New Conversation";
       const truncatedTitle =
@@ -319,6 +323,15 @@ function updateMenuWithConversations() {
       menuItem.appendChild(deleteButton);
       menu.appendChild(menuItem);
     }
+  }
+  if (!hasConversations) {
+    const noConversationsMessage = document.createElement("div");
+    noConversationsMessage.className = "no-conversations-message";
+    noConversationsMessage.innerHTML = `
+      <p>No conversations available</p>
+      <p>Start chatting now!</p>
+    `;
+    menu.appendChild(noConversationsMessage);
   }
 }
 

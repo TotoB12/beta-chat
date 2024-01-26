@@ -1,4 +1,8 @@
-@font-face {
+:root {
+    --main-color: #eee;
+  }
+  
+  @font-face {
     font-family: 'PolySans';
     src: url('/assets/fonts/PolySans-neutral.ttf') format('truetype');
     src: url('/assets/fonts/PolySans-bulky.ttf') format('truetype');
@@ -115,7 +119,7 @@ body {
 
 #send-button,
 #expander-button {
-    background: white;
+    background: var(--main-color);
     color: black;
     padding: 10px 20px;
     border: none;
@@ -142,7 +146,7 @@ body {
 
 #char-count {
     background-color: transparent;
-    color: white;
+    color: var(--main-color);
     display: none;
     /* font-size: 0.9em; */
     text-align: center;
@@ -152,11 +156,11 @@ body {
 
 #char-count hr {
     margin: 0;
-    border-top: 1px solid white;
+    border-top: 1px solid var(--main-color);
 }
 
 #upload-button {
-    background: white;
+    background: var(--main-color);
     color: black;
     border: none;
     border-radius: 10px;
@@ -227,7 +231,7 @@ body {
     top: 5px;
     right: 5px;
     font-size: 24px;
-    color: white;
+    color: var(--main-color);
     cursor: pointer;
     z-index: 10;
     opacity: 0;
@@ -250,7 +254,7 @@ body {
     border-radius: 4px;
     word-wrap: break-word;
     background-color: #333;
-    color: white;
+    color: var(--main-color);
 }
 
 .message-label {
@@ -340,7 +344,7 @@ body {
     transition: transform 0.5s cubic-bezier(0.77, 0.2, 0.05, 1.0);
     top: 0;
     left: 0;
-    color: #fff;
+    color: var(--main-color);
 }
 
 .menu-title-container {
@@ -356,7 +360,7 @@ body {
     background: none;
     border: none;
     cursor: pointer;
-    color: white;
+    color: var(--main-color);
     display: none;
     /* padding: 10px; */
 }
@@ -383,12 +387,8 @@ body {
 }
 
 #menu a {
-    color: #fff;
+    color: var(--main-color);
     text-decoration: none;
-}
-
-#menu a:hover {
-    color: #f0f0f0;
 }
 
 #menuToggle input:checked~span {
@@ -420,7 +420,7 @@ body {
     right: 20px;
     background: none;
     border: none;
-    color: #fff;
+    color: var(--main-color);
     cursor: pointer;
     padding: 0;
 }
@@ -441,7 +441,7 @@ body {
 
 .connection-status,
 .ping-status {
-    color: #fff;
+    color: var(--main-color);
     background-color: rgba(0, 0, 0, 0.9);
     padding: 5px;
     border-radius: 5px;
@@ -454,7 +454,7 @@ body {
     left: 50%;
     transform: translateX(-50%);
     background-color: red;
-    color: white;
+    color: var(--main-color);
     padding: 10px;
     border-radius: 5px;
     display: none;
@@ -533,7 +533,7 @@ body {
 
 #welcome-screen #typing-text {
     font-size: 20px;
-    color: #fff;
+    color: var(--main-color);
     margin-top: 10px;
     white-space: nowrap;
     overflow: hidden;
@@ -582,7 +582,7 @@ code.hljs {
 .language-bar {
     background-color: #888;
     /* #282c34 */
-    color: #fff;
+    color: var(--main-color);
     border-radius: 4px 4px 0 0;
     padding: 5px 15px;
     /* 5px 10px */
@@ -608,3 +608,14 @@ code.hljs {
 .code-wrapper .language-bar .copy-button {
     cursor: pointer;
 }
+
+.no-conversations-message {
+    color: var(--main-color);
+    padding: 15px 20px;
+    text-align: center;
+  }
+  
+  .no-conversations-message p {
+    margin: 5px 0;
+  }
+  
