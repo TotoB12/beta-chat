@@ -365,6 +365,10 @@ body {
     /* padding: 10px; */
 }
 
+/* .delete-conversation-button .material-symbols-outlined {
+    background: none;
+} */
+
 .delete-conversation-button:hover {
     color: red;
 }
@@ -429,6 +433,19 @@ body {
     font-size: 33px;
     background: none;
 }
+
+#deleteAllButton {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    margin-right: 10px;
+  }
+  
+  #deleteAllButton .material-symbols-outlined {
+    font-size: 33px;
+    background: none;
+  }  
 
 #status-container {
     display: flex;

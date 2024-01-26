@@ -2,6 +2,7 @@ const chatBox = document.getElementById("chat-box");
 const inputField = document.getElementById("chat-input");
 const sendButton = document.getElementById("send-button");
 const newChatButton = document.getElementById("newChatButton");
+const deleteAllButton = document.getElementById("deleteAllButton");
 const expanderButton = document.getElementById("expander-button");
 const menuToggleCheckbox = document.querySelector("#menuToggle input");
 const conversationElements = document.querySelectorAll('.conversation');
@@ -283,8 +284,10 @@ You begin your service now.`,
 function updateMenuWithConversations() {
   const menu = document.getElementById("menu");
   const resetButton = menu.querySelector("#newChatButton");
+  const deleteAllButton = menu.querySelector("#deleteAllButton");
   menu.innerHTML = "";
   menu.appendChild(resetButton);
+  menu.appendChild(deleteAllButton);
 
   let hasConversations = false;
 
@@ -369,6 +372,24 @@ function deleteImageFromImgur(deletehash) {
   xhr.send();
 }
 
+function deleteAllConversations() {
+  if(confirm("Are you sure you want to delete all conversations?")) {
+    const keysToDelete = [];
+
+    // Iterate through localStorage and store keys to delete
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.includes("-")) {
+        keysToDelete.push(key);
+      }
+    }
+
+    keysToDelete.forEach(key => deleteConversation(key));
+
+    updateMenuWithConversations();
+  }
+}
+
 function loadConversation(uuid) {
   if (!validateUUID(uuid)) {
     console.error("Invalid UUID:", uuid);
@@ -439,6 +460,7 @@ window.onload = function () {
   update_anim(0);
   updateMenuWithConversations();
   wrapCodeElements();
+  deleteAllButton.addEventListener("click", deleteAllConversations);
 };
 
 function startWebSocket() {
