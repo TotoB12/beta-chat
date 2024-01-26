@@ -3,6 +3,8 @@ const inputField = document.getElementById("chat-input");
 const sendButton = document.getElementById("send-button");
 const newChatButton = document.getElementById("newChatButton");
 const expanderButton = document.getElementById("expander-button");
+const menuToggleCheckbox = document.querySelector("#menuToggle input");
+var transparentOverlay = document.getElementById('transparent-overlay');
 var buffer;
 let latestAIMessageElement = null;
 let uploadedImageUrl = null;
@@ -287,13 +289,31 @@ function updateMenuWithConversations() {
           : fourthMessage;
 
       const menuItem = document.createElement("li");
-      menuItem.textContent = truncatedTitle;
-      menuItem.style.whiteSpace = "nowrap";
-      menuItem.style.overflow = "hidden";
-      menuItem.style.textOverflow = "ellipsis";
-      menuItem.onclick = () => loadConversation(key);
+
+      const titleContainer = document.createElement("div");
+      titleContainer.className = 'menu-title-container';
+      titleContainer.textContent = truncatedTitle;
+
+      const deleteButton = document.createElement("button");
+      deleteButton.innerHTML = '<span class="material-symbols-outlined">delete</span>';
+      deleteButton.className = "delete-conversation-button";
+      deleteButton.onclick = (e) => {
+        e.stopPropagation();
+        deleteConversation(key);
+      };
+
+      menuItem.appendChild(titleContainer);
+      menuItem.appendChild(deleteButton);
       menu.appendChild(menuItem);
     }
+  }
+}
+
+function deleteConversation(uuid) {
+  localStorage.removeItem(uuid);
+  updateMenuWithConversations();
+  if (currentConversationUUID === uuid) {
+    resetConversation();
   }
 }
 
@@ -309,7 +329,6 @@ function loadConversation(uuid) {
   window.history.pushState(null, null, `/c/${uuid}`);
   updateMenuWithConversations();
 
-  const menuToggleCheckbox = document.querySelector("#menuToggle input");
   if (menuToggleCheckbox.checked) {
     menuToggleCheckbox.click();
   }
@@ -340,6 +359,7 @@ window.onload = function () {
   startWebSocket();
   const path = window.location.pathname;
   const pathParts = path.split("/");
+  inputField.focus();
 
   if (pathParts.length === 3 && pathParts[1] === "c") {
     const potentialUUID = pathParts[2];
@@ -676,6 +696,20 @@ function scrollToBottomOfTextarea() {
 }
 
 expanderButton.addEventListener("click", toggleTextareaExpansion);
+
+menuToggleCheckbox.addEventListener('change', function() {
+  if (menuToggleCheckbox.checked) {
+    transparentOverlay.style.display = 'block';
+  } else {
+    transparentOverlay.style.display = 'none';
+  }
+});
+
+transparentOverlay.addEventListener('click', function() {
+  menuToggleCheckbox.checked = false;
+  transparentOverlay.style.display = 'none';
+  inputField.focus();
+});
 
 function throttle(func, limit) {
   let inThrottle;
