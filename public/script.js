@@ -4,6 +4,7 @@ const sendButton = document.getElementById("send-button");
 const newChatButton = document.getElementById("newChatButton");
 const expanderButton = document.getElementById("expander-button");
 const menuToggleCheckbox = document.querySelector("#menuToggle input");
+const conversationElements = document.querySelectorAll('.conversation');
 var transparentOverlay = document.getElementById('transparent-overlay');
 var buffer;
 let latestAIMessageElement = null;
@@ -132,7 +133,6 @@ function loadHistory() {
   }
   chatBox.scrollTop = chatBox.scrollHeight;
   wrapCodeElements();
-  hljs.highlightAll();
 }
 
 function checkImageInHistory() {
@@ -289,6 +289,12 @@ function updateMenuWithConversations() {
           : fourthMessage;
 
       const menuItem = document.createElement("li");
+      menuItem.className = "conversation"; // Add this line
+      menuItem.dataset.uuid = key; // Store the UUID in a data attribute
+
+      menuItem.addEventListener('click', function() {
+        loadConversation(this.dataset.uuid); // Load the conversation when clicked
+      });
 
       const titleContainer = document.createElement("div");
       titleContainer.className = 'menu-title-container';
@@ -336,6 +342,12 @@ function loadConversation(uuid) {
   updateChatBoxVisibility();
 }
 
+conversationElements.forEach(element => {
+  element.addEventListener('click', function() {
+    loadConversation(element.dataset.uuid);
+  });
+});
+
 function updateConnectionStatus(status) {
   const connectionStatusElement = document.getElementById("connection-status");
   if (status === "online") {
@@ -357,6 +369,7 @@ function simulateButtonHover() {
 
 window.onload = function () {
   startWebSocket();
+  hljs.configure({languages: []});
   const path = window.location.pathname;
   const pathParts = path.split("/");
   inputField.focus();
@@ -379,6 +392,7 @@ window.onload = function () {
   setupAnimCanvas();
   update_anim(0);
   updateMenuWithConversations();
+  wrapCodeElements();
 };
 
 function startWebSocket() {
@@ -422,7 +436,7 @@ function startWebSocket() {
       }
     } catch (e) {
       processAIResponse(event.data);
-      hljs.highlightAll();
+      wrapCodeElements();
     }
   };
 
@@ -477,9 +491,9 @@ function processAIResponse(message, isError = false) {
 
   const htmlContent = marked.parse(latestAIMessageElement.fullMessage);
   latestAIMessageElement.innerHTML = htmlContent;
-  wrapCodeElements();
   chatBox.scrollTop = chatBox.scrollHeight;
   updateChatBoxVisibility();
+  wrapCodeElements();
 }
 
 function sendMessage() {
@@ -531,7 +545,6 @@ function sendMessage() {
   uploadedImage = null;
   ws.send(JSON.stringify(message));
   disableUserInput();
-  hljs.highlightAll();
   wrapCodeElements();
 }
 
@@ -1045,6 +1058,7 @@ function setupAnimCanvas() {
 }
 
 function wrapCodeElements() {
+  hljs.highlightAll();
   const codeElements = document.querySelectorAll("code");
   codeElements.forEach((codeElement) => {
     if (
@@ -1058,7 +1072,10 @@ function wrapCodeElements() {
     wrapper.className = "code-wrapper";
 
     const languageMatch = codeElement.className.match(/language-(\w+)/);
-    const language = languageMatch ? languageMatch[1] : "unknown";
+    let language = languageMatch ? languageMatch[1] : "language unknown";
+    if (language === "undefined") {
+      language = "unknown";
+    }
 
     const languageBar = document.createElement("div");
     languageBar.className = "language-bar";
@@ -1076,7 +1093,7 @@ function wrapCodeElements() {
 
       setTimeout(() => {
         copyIcon.textContent = "content_copy";
-        copyText.textContent = "Copy code";
+        copyText.textContent = "Copy";
       }, 2000);
     };
 
@@ -1096,4 +1113,3 @@ function wrapCodeElements() {
     wrapper.appendChild(codeElement);
   });
 }
-
