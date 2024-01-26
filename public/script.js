@@ -34,6 +34,7 @@ let userMouseY = 0;
 
 let ws;
 let pingInterval;
+const imgurClientId = '6a8a51f3d7933e1';
 
 function generateUUID() {
   let uuid;
@@ -101,6 +102,20 @@ function sendPing() {
   }
 }
 
+function createUserMessage(entry) {
+  const label = document.createElement("div");
+  label.className = "message-label";
+  label.textContent = "You";
+  chatBox.appendChild(label);
+  chatBox.innerHTML += `<div class="message user-message">${marked.parse(
+    entry.parts,
+  )}</div>`;
+
+  if (entry.image) {
+    displayImage(entry.image.link);
+  }
+}
+
 function loadHistory() {
   const history = getHistory();
 
@@ -110,16 +125,8 @@ function loadHistory() {
     label.className = "message-label";
 
     if (entry.role === "user") {
-      label.textContent = "You";
-      chatBox.appendChild(label);
-      chatBox.innerHTML += `<div class="message user-message">${marked.parse(
-        entry.parts,
-      )}</div>`;
-
-      if (entry.image) {
-        // console.log(entry);
-        displayImage(entry.image.link);
-      }
+      createUserMessage(entry);
+      console.log(entry);
     } else if (entry.role === "model") {
       label.textContent = "TotoB12";
       chatBox.appendChild(label);
@@ -292,7 +299,7 @@ function updateMenuWithConversations() {
       menuItem.className = "conversation"; // Add this line
       menuItem.dataset.uuid = key; // Store the UUID in a data attribute
 
-      menuItem.addEventListener('click', function() {
+      menuItem.addEventListener('click', function () {
         loadConversation(this.dataset.uuid); // Load the conversation when clicked
       });
 
@@ -316,11 +323,37 @@ function updateMenuWithConversations() {
 }
 
 function deleteConversation(uuid) {
+  const conversation = JSON.parse(localStorage.getItem(uuid));
+  if (conversation) {
+    conversation.forEach(entry => {
+      if (entry.image && entry.image.deletehash) {
+        deleteImageFromImgur(entry.image.deletehash);
+      }
+    });
+  }
+
   localStorage.removeItem(uuid);
   updateMenuWithConversations();
   if (currentConversationUUID === uuid) {
     resetConversation();
+    // if (menuToggleCheckbox.checked) {
+    //   menuToggleCheckbox.click();
+    // }
   }
+}
+
+function deleteImageFromImgur(deletehash) {
+  const xhr = new XMLHttpRequest();
+  xhr.open('DELETE', `https://api.imgur.com/3/image/${deletehash}`);
+  xhr.setRequestHeader('Authorization', `Client-ID ${imgurClientId}`);
+  xhr.onload = function () {
+    if (xhr.status === 200) {
+      console.log('Image deleted successfully');
+    } else {
+      console.log('Failed to delete image');
+    }
+  };
+  xhr.send();
 }
 
 function loadConversation(uuid) {
@@ -343,7 +376,7 @@ function loadConversation(uuid) {
 }
 
 conversationElements.forEach(element => {
-  element.addEventListener('click', function() {
+  element.addEventListener('click', function () {
     loadConversation(element.dataset.uuid);
   });
 });
@@ -369,7 +402,7 @@ function simulateButtonHover() {
 
 window.onload = function () {
   startWebSocket();
-  hljs.configure({languages: []});
+  hljs.configure({ languages: [] });
   const path = window.location.pathname;
   const pathParts = path.split("/");
   inputField.focus();
@@ -512,18 +545,7 @@ function sendMessage() {
   };
 
   updateHistory("user", userText, false, uploadedImage);
-
-  const userLabel = document.createElement("div");
-  userLabel.className = "message-label";
-  userLabel.textContent = "You";
-  chatBox.appendChild(userLabel);
-  chatBox.innerHTML += `<div class="message user-message">${marked.parse(
-    userText,
-  )}</div>`;
-
-  if (uploadedImageUrl) {
-    displayImage(uploadedImageUrl);
-  }
+  createUserMessage({ role: "user", parts: userText, error: false, image: uploadedImage });
 
   if (!currentConversationUUID) {
     currentConversationUUID = generateUUID();
@@ -710,7 +732,7 @@ function scrollToBottomOfTextarea() {
 
 expanderButton.addEventListener("click", toggleTextareaExpansion);
 
-menuToggleCheckbox.addEventListener('change', function() {
+menuToggleCheckbox.addEventListener('change', function () {
   if (menuToggleCheckbox.checked) {
     transparentOverlay.style.display = 'block';
   } else {
@@ -718,7 +740,7 @@ menuToggleCheckbox.addEventListener('change', function() {
   }
 });
 
-transparentOverlay.addEventListener('click', function() {
+transparentOverlay.addEventListener('click', function () {
   menuToggleCheckbox.checked = false;
   transparentOverlay.style.display = 'none';
   inputField.focus();
@@ -1102,7 +1124,7 @@ function wrapCodeElements() {
     copyIcon.textContent = "content_copy";
 
     const copyText = document.createElement("span");
-    copyText.textContent = "Copy code";
+    copyText.textContent = "Copy";
 
     copyButton.appendChild(copyIcon);
     copyButton.appendChild(copyText);
