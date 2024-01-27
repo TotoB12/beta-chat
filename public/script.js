@@ -910,9 +910,6 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-
-
-
 function throttle(func, limit) {
   let inThrottle;
   return function () {
