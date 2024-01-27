@@ -754,7 +754,7 @@ function countLines(textarea) {
 
   buffer.value = textarea.value;
 
-  const {scrollHeight} = buffer;
+  const { scrollHeight } = buffer;
   const tolerance = -7;
 
   let lineCount = Math.floor((scrollHeight + tolerance) / lineHeight);
@@ -804,14 +804,14 @@ function isCursorOnLastLine(textarea) {
 function toggleExpanderButtonVisibility(textarea) {
   const expanderButton = document.getElementById("expander-button");
   if (textarea.classList.contains("expanded")) {
-      expanderButton.style.display = "flex";
-    }
+    expanderButton.style.display = "flex";
+  }
   else if (textarea.scrollHeight > textarea.clientHeight) {
-        expanderButton.style.display = "flex";
-      }
+    expanderButton.style.display = "flex";
+  }
   else {
-        expanderButton.style.display = "none";
-      }
+    expanderButton.style.display = "none";
+  }
 }
 
 function toggleTextareaExpansion() {
@@ -838,13 +838,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
   expanderButton.addEventListener("click", toggleTextareaExpansion);
 
-menuToggleCheckbox.addEventListener('change', function () {
-  if (menuToggleCheckbox.checked) {
-    transparentOverlay.style.display = 'block';
-  } else {
-    transparentOverlay.style.display = 'none';
-  }
-});
+  menuToggleCheckbox.addEventListener('change', function () {
+    if (menuToggleCheckbox.checked) {
+      transparentOverlay.style.display = 'block';
+    } else {
+      transparentOverlay.style.display = 'none';
+    }
+  });
 
   transparentOverlay.addEventListener('click', function () {
     menuToggleCheckbox.checked = false;
@@ -853,61 +853,61 @@ menuToggleCheckbox.addEventListener('change', function () {
   });
 
   inputField.addEventListener("input", resizeTextarea);
-inputField.addEventListener("input", updateCharacterCount);
+  inputField.addEventListener("input", updateCharacterCount);
 
-newChatButton.addEventListener("click", function () {
-  resetConversation();
+  newChatButton.addEventListener("click", function () {
+    resetConversation();
 
-  let menuToggleCheckbox = document.querySelector("#menuToggle input");
-  if (menuToggleCheckbox.checked) {
-    menuToggleCheckbox.click();
-  }
-});
-
-document.querySelector(".close-icon").addEventListener("click", function () {
-  if (currentUploadXHR && currentUploadXHR.readyState !== XMLHttpRequest.DONE) {
-    currentUploadXHR.abort();
-    displayNotification("Upload canceled.", "info");
-  }
-
-  if (uploadedImage && uploadedImage.deletehash) {
-    deleteImageFromImgur(uploadedImage.deletehash);
-  }
-
-  resetUploadButton();
-  uploadedImageUrl = null;
-  uploadedImage = null;
-});
-
-document.getElementById("file-input").addEventListener("change", function () {
-  const file = this.files[0];
-  if (file) {
-    const isValid = validateFile(file);
-    if (isValid) {
-      displayLocalImagePreview(file);
-      upload(file);
-    } else {
-      displayNotification(
-        "Invalid file. Please select an image (PNG, JPEG, WEBM, HEIC, HEIF) under 3MB.",
-        "error",
-      );
-      uploadButton.classList.add("shake");
-      setTimeout(() => uploadButton.classList.remove("shake"), 120);
+    let menuToggleCheckbox = document.querySelector("#menuToggle input");
+    if (menuToggleCheckbox.checked) {
+      menuToggleCheckbox.click();
     }
-  }
-});
+  });
 
-dropZone.addEventListener("drop", handleDrop, false);
+  document.querySelector(".close-icon").addEventListener("click", function () {
+    if (currentUploadXHR && currentUploadXHR.readyState !== XMLHttpRequest.DONE) {
+      currentUploadXHR.abort();
+      displayNotification("Upload canceled.", "info");
+    }
 
-anim_canvas.addEventListener("mousemove", (e) => {
-  useSimulatedMouse = false;
-  userMouseX = e.offsetX;
-  userMouseY = e.offsetY;
-});
+    if (uploadedImage && uploadedImage.deletehash) {
+      deleteImageFromImgur(uploadedImage.deletehash);
+    }
 
-anim_canvas.addEventListener("mouseleave", () => {
-  useSimulatedMouse = true;
-});
+    resetUploadButton();
+    uploadedImageUrl = null;
+    uploadedImage = null;
+  });
+
+  document.getElementById("file-input").addEventListener("change", function () {
+    const file = this.files[0];
+    if (file) {
+      const isValid = validateFile(file);
+      if (isValid) {
+        displayLocalImagePreview(file);
+        upload(file);
+      } else {
+        displayNotification(
+          "Invalid file. Please select an image (PNG, JPEG, WEBM, HEIC, HEIF) under 3MB.",
+          "error",
+        );
+        uploadButton.classList.add("shake");
+        setTimeout(() => uploadButton.classList.remove("shake"), 120);
+      }
+    }
+  });
+
+  dropZone.addEventListener("drop", handleDrop, false);
+
+  anim_canvas.addEventListener("mousemove", (e) => {
+    useSimulatedMouse = false;
+    userMouseX = e.offsetX;
+    userMouseY = e.offsetY;
+  });
+
+  anim_canvas.addEventListener("mouseleave", () => {
+    useSimulatedMouse = true;
+  });
 });
 
 
@@ -982,7 +982,7 @@ function upload(file) {
     resetUploadButton();
     return;
   }
-  
+
   if (currentUploadXHR && currentUploadXHR.readyState !== XMLHttpRequest.DONE) {
     currentUploadXHR.abort();
   }
@@ -1061,7 +1061,7 @@ function resetUploadButton() {
   const fileInput = document.getElementById("file-input"); // Get the file input element
   const imageLoadingIndicator = document.querySelector(".loading-indicator");
   const closePreview = document.querySelector(".close-icon");
-  
+
   imagePreview.classList.remove("dimmed");
 
   closePreview.style.display = "none";
@@ -1157,7 +1157,7 @@ function unhighlight(e) {
 
 function handleDrop(e) {
   let dt = e.dataTransfer;
-  let {files} = dt;
+  let { files } = dt;
 
   if (files.length) {
     const file = files[0];
