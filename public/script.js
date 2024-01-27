@@ -350,6 +350,13 @@ function updateMenuWithConversations() {
       <p>Start chatting now!</p>
     `;
     menu.appendChild(noConversationsMessage);
+
+
+    deleteAllButton.removeEventListener("click", deleteAllConversations);
+    deleteAllButton.classList.add('disabled');
+  } else {
+    deleteAllButton.addEventListener("click", deleteAllConversations);
+    deleteAllButton.classList.remove('disabled');
   }
 }
 
@@ -395,6 +402,7 @@ function deleteImageFromImgur(deletehash) {
     }
   };
   xhr.send();
+  displayNotification("Image(s) deleted", "data", 1000);
 }
 
 function deleteAllConversations() {
@@ -487,7 +495,13 @@ window.onload = function () {
   update_anim(0);
   updateMenuWithConversations();
   wrapCodeElements();
-  deleteAllButton.addEventListener("click", deleteAllConversations);
+  // deleteAllButton.addEventListener("click", deleteAllConversations);
+  deleteAllButton.addEventListener("click", function () {
+    if (this.classList.contains('disabled') === true) {
+      this.classList.add("shake");
+      setTimeout(() => this.classList.remove("shake"), 120);
+    }
+  });
 };
 
 function startWebSocket() {
@@ -597,6 +611,10 @@ function processAIResponse(message, isError = false) {
 
 function sendMessage() {
   const userText = inputField.value.trim();
+  if (currentUploadXHR && currentUploadXHR.readyState !== XMLHttpRequest.DONE) {
+    displayNotification("Please wait until the image upload is complete.", "data");
+    return;
+  }
   if (userText.length > 60000) {
     displayNotification("Character limit exceeded. Please shorten your message.", "error");
     return;
@@ -666,7 +684,9 @@ function displayImage(imageUrl) {
 }
 
 document.getElementById("image-modal").addEventListener("click", function (e) {
-  if (e.target !== this) return;
+  if (e.target !== this) {
+    return;
+  }
   this.classList.remove("show-modal");
 });
 
@@ -891,27 +911,28 @@ function upload(file) {
     resetUploadButton();
     return;
   }
+  
+  if (currentUploadXHR && currentUploadXHR.readyState !== XMLHttpRequest.DONE) {
+    currentUploadXHR.abort();
+  }
 
-  displayNotification("Uploading...", "info");
+  displayNotification("Uploading...", "data");
 
-  var fd = new FormData();
+  let fd = new FormData();
   fd.append("image", file);
   currentUploadXHR = new XMLHttpRequest();
   currentUploadXHR.open("POST", "https://api.imgur.com/3/image.json");
 
   currentUploadXHR.onload = function () {
     try {
-      var response = JSON.parse(currentUploadXHR.responseText);
+      let response = JSON.parse(currentUploadXHR.responseText);
       if (response.success) {
         document.querySelector(".loading-indicator").style.display = "none";
         document.getElementById("image-preview").classList.remove("dimmed");
         uploadedImageUrl = response.data.link;
         uploadedImage = response.data;
         updateCharacterCount();
-        displayNotification(
-          "Upload successful.",
-          "success",
-        );
+        displayNotification("Upload successful.", "info",);
         console.log(response.data);
         const smallThumbnailUrl = uploadedImageUrl.replace(
           /(\.[\w\d_-]+)$/i,
@@ -968,7 +989,6 @@ document.querySelector(".close-icon").addEventListener("click", function () {
 
   if (uploadedImage && uploadedImage.deletehash) {
     deleteImageFromImgur(uploadedImage.deletehash);
-    displayNotification("Image deleted.", "info");
   }
 
   resetUploadButton();
@@ -980,15 +1000,22 @@ document.querySelector(".close-icon").addEventListener("click", function () {
 function resetUploadButton() {
   const imagePreview = document.getElementById("image-preview");
   const uploadButton = document.getElementById("upload-button");
+  const fileInput = document.getElementById("file-input"); // Get the file input element
   const imageLoadingIndicator = document.querySelector(".loading-indicator");
   const closePreview = document.querySelector(".close-icon");
+  
   imagePreview.classList.remove("dimmed");
 
   closePreview.style.display = "none";
   imagePreview.style.display = "none";
   uploadButton.style.display = "block";
   imageLoadingIndicator.style.display = "none";
+  uploadedImageUrl = null;
+  uploadedImage = null;
+
+  fileInput.value = ""; // Reset the file input
 }
+
 
 function displayLocalImagePreview(file) {
   const reader = new FileReader();
@@ -1031,7 +1058,7 @@ function validateFile(file) {
   return validTypes.includes(file.type) && file.size <= maxSize;
 }
 
-function displayNotification(message, type) {
+function displayNotification(message, type, duration = 2000) {
   const notificationArea = document.getElementById("notification-area");
   notificationArea.innerHTML = "";
 
@@ -1054,7 +1081,7 @@ function displayNotification(message, type) {
 
   setTimeout(() => {
     notificationArea.classList.remove("show");
-  }, 2000);
+  }, duration);
 }
 
 const dropZone = document.getElementById("drop-zone");

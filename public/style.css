@@ -1,8 +1,10 @@
 :root {
     --main-color: #eee;
-  }
-  
-  @font-face {
+    --disabled-color: #aaa;
+    --hover-color: #ddd;
+}
+
+@font-face {
     font-family: 'PolySans';
     src: url('/assets/fonts/PolySans-neutral.ttf') format('truetype');
     src: url('/assets/fonts/PolySans-bulky.ttf') format('truetype');
@@ -32,7 +34,7 @@ body {
     font-family: 'PolySans', Arial, sans-serif;
     margin: 0;
     background-color: #1e1e1e;
-    color: #fff;
+    color: var(--main-color);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -133,9 +135,9 @@ body {
 }
 
 #send-button.ai-responding {
-    background: #bbb; /* Gray background */
-    color: #666; /* Gray text color */
-    cursor: default; /* Default cursor to indicate it's not clickable */
+    background: #bbb;
+    color: #666;
+    cursor: default;
 }
 
 #expander-button {
@@ -143,11 +145,11 @@ body {
 }
 
 #send-button:hover {
-    background-color: #f0f0f0;
+    background-color: var(--hover-color);
 }
 
 #send-button.hover-effect {
-    background-color: #f0f0f0;
+    background-color: var(--hover-color);
 }
 
 #char-count {
@@ -184,7 +186,7 @@ body {
 }
 
 #upload-button:hover {
-    background-color: #f0f0f0;
+    background-color: var(--hover-color);
 }
 
 .upload-preview-container {
@@ -435,23 +437,44 @@ body {
     padding: 0;
 }
 
-#newChatButton .material-symbols-outlined {
-    font-size: 33px;
-    background: none;
-}
-
 #deleteAllButton {
+    position: absolute;
     background: none;
     border: none;
     color: var(--main-color);
     cursor: pointer;
     margin-right: 10px;
-  }
-  
-  #deleteAllButton .material-symbols-outlined {
+    top: 9px;
+    right: 50px;
+}
+
+#deleteAllButton.disabled {
+    color: var(--disabled-color);
+    cursor: pointer;
+}
+
+#newChatButton .material-symbols-outlined, #deleteAllButton .material-symbols-outlined {
     font-size: 33px;
     background: none;
-  }  
+}
+
+#newChatButton:hover,
+#deleteAllButton:hover:not(.disabled) {
+    color: var(--hover-color);
+    /* transform: scale(1.02); */
+    /* transition: transform 0.3s ease; */
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%, 75% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+  }
+  
+  .shake {
+    animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both;
+  }
+  
 
 #status-container {
     display: flex;
@@ -649,9 +672,8 @@ code.hljs {
     color: var(--main-color);
     padding: 15px 20px;
     text-align: center;
-  }
-  
-  .no-conversations-message p {
+}
+
+.no-conversations-message p {
     margin: 5px 0;
-  }
-  
+}
