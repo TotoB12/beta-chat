@@ -6,8 +6,8 @@ const deleteAllButton = document.getElementById("deleteAllButton");
 const expanderButton = document.getElementById("expander-button");
 const menuToggleCheckbox = document.querySelector("#menuToggle input");
 const conversationElements = document.querySelectorAll('.conversation');
-var transparentOverlay = document.getElementById('transparent-overlay');
-var buffer;
+let transparentOverlay = document.getElementById('transparent-overlay');
+let buffer;
 let latestAIMessageElement = null;
 let uploadedImageUrl = null;
 let uploadedImage = null;
@@ -491,7 +491,7 @@ window.onload = function () {
 
   updateCharacterCount();
   updateChatBoxVisibility();
-  setupAnimCanvas();
+  // setupAnimCanvas();
   update_anim(0);
   updateMenuWithConversations();
   wrapCodeElements();
@@ -623,7 +623,9 @@ function sendMessage() {
     displayNotification("AI is processing a response. Please wait.");
     return;
   }
-  if (userText === "" || isAIResponding) return;
+  if (userText === "" || isAIResponding) {
+    return;
+  }
 
   const message = {
     type: "user-message",
@@ -724,12 +726,14 @@ function countLines(textarea) {
     document.body.appendChild(buffer);
   }
 
-  var cs = window.getComputedStyle(textarea);
-  var paddingLeft = parseInt(cs.paddingLeft, 10);
-  var paddingRight = parseInt(cs.paddingRight, 10);
-  var lineHeight = parseInt(cs.lineHeight, 10);
+  let cs = window.getComputedStyle(textarea);
+  let paddingLeft = parseInt(cs.paddingLeft, 10);
+  let paddingRight = parseInt(cs.paddingRight, 10);
+  let lineHeight = parseInt(cs.lineHeight, 10);
 
-  if (isNaN(lineHeight)) lineHeight = parseInt(cs.fontSize, 10);
+  if (isNaN(lineHeight)) {
+    lineHeight = parseInt(cs.fontSize, 10);
+  }
 
   buffer.style.width = textarea.clientWidth - paddingLeft - paddingRight + "px";
 
@@ -742,7 +746,7 @@ function countLines(textarea) {
 
   buffer.value = textarea.value;
 
-  const scrollHeight = buffer.scrollHeight;
+  const {scrollHeight} = buffer;
   const tolerance = -7;
 
   let lineCount = Math.floor((scrollHeight + tolerance) / lineHeight);
@@ -792,14 +796,14 @@ function isCursorOnLastLine(textarea) {
 function toggleExpanderButtonVisibility(textarea) {
   const expanderButton = document.getElementById("expander-button");
   if (textarea.classList.contains("expanded")) {
-    expanderButton.style.display = "flex";
-  } else {
-    if (textarea.scrollHeight > textarea.clientHeight) {
       expanderButton.style.display = "flex";
-    } else {
-      expanderButton.style.display = "none";
     }
-  }
+  else if (textarea.scrollHeight > textarea.clientHeight) {
+        expanderButton.style.display = "flex";
+      }
+  else {
+        expanderButton.style.display = "none";
+      }
 }
 
 function toggleTextareaExpansion() {
@@ -886,7 +890,7 @@ function resetConversation() {
 newChatButton.addEventListener("click", function () {
   resetConversation();
 
-  var menuToggleCheckbox = document.querySelector("#menuToggle input");
+  let menuToggleCheckbox = document.querySelector("#menuToggle input");
   if (menuToggleCheckbox.checked) {
     menuToggleCheckbox.click();
   }
@@ -1115,7 +1119,7 @@ dropZone.addEventListener("drop", handleDrop, false);
 
 function handleDrop(e) {
   let dt = e.dataTransfer;
-  let files = dt.files;
+  let {files} = dt;
 
   if (files.length) {
     const file = files[0];
@@ -1199,11 +1203,6 @@ function update_anim(t) {
 
   window.requestAnimationFrame(update_anim);
   ctx.strokeStyle = "#FFFFFF";
-}
-
-function setupAnimCanvas() {
-  anim_canvas.width = anim_canvas.width;
-  anim_canvas.height = anim_canvas.height;
 }
 
 function wrapCodeElements() {
