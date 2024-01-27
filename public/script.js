@@ -503,6 +503,11 @@ window.onload = function () {
       setTimeout(() => this.classList.remove("shake"), 120);
     }
   });
+  transparentOverlay.addEventListener('click', function () {
+    menuToggleCheckbox.checked = false;
+    transparentOverlay.style.display = 'none';
+    inputField.focus();
+  });
 };
 
 function startWebSocket() {
@@ -844,11 +849,7 @@ menuToggleCheckbox.addEventListener('change', function () {
   }
 });
 
-transparentOverlay.addEventListener('click', function () {
-  menuToggleCheckbox.checked = false;
-  transparentOverlay.style.display = 'none';
-  inputField.focus();
-});
+
 
 function throttle(func, limit) {
   let inThrottle;
