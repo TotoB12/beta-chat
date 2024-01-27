@@ -161,7 +161,8 @@ function updateCharacterCount() {
     .replace(",", " ")}<br><hr>${charLimit.toLocaleString().replace(",", " ")}`;
 
   const hrElement = charCountElement.querySelector("hr");
-  if (charCount > charLimit) {
+  if (charCount >= charLimit) {
+    displayNotification("Character limit exceeded.", "error");
     charCountElement.style.color = "red";
     hrElement.style.borderColor = "red";
     inputField.value = inputField.value.substring(0, charLimit);
@@ -338,6 +339,16 @@ function updateMenuWithConversations() {
   }
 }
 
+function checkForConversations() {
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.includes("-")) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function deleteConversation(uuid) {
   const conversation = JSON.parse(localStorage.getItem(uuid));
   if (conversation) {
@@ -353,6 +364,9 @@ function deleteConversation(uuid) {
   if (currentConversationUUID === uuid) {
     resetConversation();
   }
+  if (!checkForConversations() && menuToggleCheckbox.checked) {
+    menuToggleCheckbox.click();
+  }  
 }
 
 function deleteImageFromImgur(deletehash) {
@@ -373,7 +387,6 @@ function deleteAllConversations() {
   if(confirm("Are you sure you want to delete all conversations?")) {
     const keysToDelete = [];
 
-    // Iterate through localStorage and store keys to delete
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.includes("-")) {
@@ -867,7 +880,7 @@ function upload(file) {
         uploadedImage = response.data;
         updateCharacterCount();
         displayNotification(
-          "Upload successful. Image URL: " + response.data.link,
+          "Upload successful.",
           "success",
         );
         console.log(response.data);
@@ -923,10 +936,17 @@ document.querySelector(".close-icon").addEventListener("click", function () {
     currentUploadXHR.abort();
     displayNotification("Upload canceled.", "info");
   }
+
+  if (uploadedImage && uploadedImage.deletehash) {
+    deleteImageFromImgur(uploadedImage.deletehash);
+    displayNotification("Image deleted.", "info");
+  }
+
   resetUploadButton();
   uploadedImageUrl = null;
   uploadedImage = null;
 });
+
 
 function resetUploadButton() {
   const imagePreview = document.getElementById("image-preview");
@@ -984,11 +1004,29 @@ function validateFile(file) {
 
 function displayNotification(message, type) {
   const notificationArea = document.getElementById("notification-area");
-  notificationArea.textContent = message;
-  notificationArea.style.backgroundColor = type === "error" ? "red" : "green";
-  notificationArea.style.display = "block";
+  notificationArea.innerHTML = ""; // Clear existing content
+
+  const icon = document.createElement("span");
+  icon.className = "material-symbols-outlined";
+
+  // Set color based on type, default to main_color for unknown types
+  const color = type === "error" ? "red" : (type === "info" ? "green" : main_color);
+
+  // Set icon and text color
+  icon.style.color = color;
+  icon.textContent = type === "error" ? "error" : "info";
+
+  const text = document.createElement("span");
+  text.textContent = message;
+  text.style.color = color;
+
+  notificationArea.appendChild(icon);
+  notificationArea.appendChild(text);
+
+  notificationArea.classList.add("show");
+
   setTimeout(() => {
-    notificationArea.style.display = "none";
+    notificationArea.classList.remove("show");
   }, 2000);
 }
 

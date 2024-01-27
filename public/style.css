@@ -465,16 +465,28 @@ body {
     font-size: 0.8em;
 }
 
-.notification-area {
+#notification-area {
+    background-color: transparent;
+    color: inherit;
+    padding: 10px;
+    /* border-radius: 5px; */
+    display: flex;
     position: fixed;
     top: 10px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: red;
-    color: var(--main-color);
-    padding: 10px;
-    border-radius: 5px;
-    display: none;
+    font-size: 1.2em;
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    opacity: 0;
+    top: 0;
+    transition: top 0.5s ease, opacity 0.5s ease;
+}
+
+#notification-area.show {
+    top: 10px;
+    opacity: 1;
 }
 
 #drop-zone.highlight {
