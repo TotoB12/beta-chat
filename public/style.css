@@ -112,7 +112,7 @@ body {
     height: 22px;
     /* max-height: 176px; */
     overflow-y: auto;
-    border-radius: 22px;
+    /* border-radius: 22px; */
     /* margin-right: 17px; */
     flex-grow: 1;
 }
