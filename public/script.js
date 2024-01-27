@@ -834,7 +834,9 @@ function scrollToBottomOfTextarea() {
   textarea.scrollTop = textarea.scrollHeight;
 }
 
-expanderButton.addEventListener("click", toggleTextareaExpansion);
+document.addEventListener("DOMContentLoaded", function () {
+
+  expanderButton.addEventListener("click", toggleTextareaExpansion);
 
 menuToggleCheckbox.addEventListener('change', function () {
   if (menuToggleCheckbox.checked) {
@@ -844,11 +846,72 @@ menuToggleCheckbox.addEventListener('change', function () {
   }
 });
 
-transparentOverlay.addEventListener('click', function () {
-  menuToggleCheckbox.checked = false;
-  transparentOverlay.style.display = 'none';
-  inputField.focus();
+  transparentOverlay.addEventListener('click', function () {
+    menuToggleCheckbox.checked = false;
+    transparentOverlay.style.display = 'none';
+    inputField.focus();
+  });
+
+  inputField.addEventListener("input", resizeTextarea);
+inputField.addEventListener("input", updateCharacterCount);
+
+newChatButton.addEventListener("click", function () {
+  resetConversation();
+
+  let menuToggleCheckbox = document.querySelector("#menuToggle input");
+  if (menuToggleCheckbox.checked) {
+    menuToggleCheckbox.click();
+  }
 });
+
+document.querySelector(".close-icon").addEventListener("click", function () {
+  if (currentUploadXHR && currentUploadXHR.readyState !== XMLHttpRequest.DONE) {
+    currentUploadXHR.abort();
+    displayNotification("Upload canceled.", "info");
+  }
+
+  if (uploadedImage && uploadedImage.deletehash) {
+    deleteImageFromImgur(uploadedImage.deletehash);
+  }
+
+  resetUploadButton();
+  uploadedImageUrl = null;
+  uploadedImage = null;
+});
+
+document.getElementById("file-input").addEventListener("change", function () {
+  const file = this.files[0];
+  if (file) {
+    const isValid = validateFile(file);
+    if (isValid) {
+      displayLocalImagePreview(file);
+      upload(file);
+    } else {
+      displayNotification(
+        "Invalid file. Please select an image (PNG, JPEG, WEBM, HEIC, HEIF) under 3MB.",
+        "error",
+      );
+      uploadButton.classList.add("shake");
+      setTimeout(() => uploadButton.classList.remove("shake"), 120);
+    }
+  }
+});
+
+dropZone.addEventListener("drop", handleDrop, false);
+
+anim_canvas.addEventListener("mousemove", (e) => {
+  useSimulatedMouse = false;
+  userMouseX = e.offsetX;
+  userMouseY = e.offsetY;
+});
+
+anim_canvas.addEventListener("mouseleave", () => {
+  useSimulatedMouse = true;
+});
+});
+
+
+
 
 function throttle(func, limit) {
   let inThrottle;
@@ -874,8 +937,7 @@ function resetTextarea() {
   textarea.style.overflowY = "hidden";
 }
 
-inputField.addEventListener("input", resizeTextarea);
-inputField.addEventListener("input", updateCharacterCount);
+
 
 function resetConversation() {
   uploadedImageUrl = null;
@@ -895,14 +957,7 @@ function resetConversation() {
   // window.location.href = "/";
 }
 
-newChatButton.addEventListener("click", function () {
-  resetConversation();
 
-  let menuToggleCheckbox = document.querySelector("#menuToggle input");
-  if (menuToggleCheckbox.checked) {
-    menuToggleCheckbox.click();
-  }
-});
 
 function upload(file) {
   if (!file || !file.type.match(/image.*/)) {
@@ -997,20 +1052,7 @@ function updateUploadButtonWithImage(imageUrl) {
   uploadButton.style.display = "none";
 }
 
-document.querySelector(".close-icon").addEventListener("click", function () {
-  if (currentUploadXHR && currentUploadXHR.readyState !== XMLHttpRequest.DONE) {
-    currentUploadXHR.abort();
-    displayNotification("Upload canceled.", "info");
-  }
 
-  if (uploadedImage && uploadedImage.deletehash) {
-    deleteImageFromImgur(uploadedImage.deletehash);
-  }
-
-  resetUploadButton();
-  uploadedImageUrl = null;
-  uploadedImage = null;
-});
 
 
 function resetUploadButton() {
@@ -1045,23 +1087,7 @@ function displayLocalImagePreview(file) {
   reader.readAsDataURL(file);
 }
 
-document.getElementById("file-input").addEventListener("change", function () {
-  const file = this.files[0];
-  if (file) {
-    const isValid = validateFile(file);
-    if (isValid) {
-      displayLocalImagePreview(file);
-      upload(file);
-    } else {
-      displayNotification(
-        "Invalid file. Please select an image (PNG, JPEG, WEBM, HEIC, HEIF) under 3MB.",
-        "error",
-      );
-      uploadButton.classList.add("shake");
-      setTimeout(() => uploadButton.classList.remove("shake"), 120);
-    }
-  }
-});
+
 
 function validateFile(file) {
   const validTypes = [
@@ -1129,8 +1155,6 @@ function unhighlight(e) {
   dropZone.classList.remove("highlight");
 }
 
-dropZone.addEventListener("drop", handleDrop, false);
-
 function handleDrop(e) {
   let dt = e.dataTransfer;
   let {files} = dt;
@@ -1154,16 +1178,6 @@ function handleDrop(e) {
 function handleFiles(files) {
   [...files].forEach(upload);
 }
-
-anim_canvas.addEventListener("mousemove", (e) => {
-  useSimulatedMouse = false;
-  userMouseX = e.offsetX;
-  userMouseY = e.offsetY;
-});
-
-anim_canvas.addEventListener("mouseleave", () => {
-  useSimulatedMouse = true;
-});
 
 for (let i = 0; i < anim_params.pointsNumber; i++) {
   anim_trail[i] = {
