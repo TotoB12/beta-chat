@@ -7,7 +7,7 @@ const deleteAllButton = document.getElementById("deleteAllButton");
 const expanderButton = document.getElementById("expander-button");
 const menuToggleCheckbox = document.querySelector("#menuToggle input");
 const conversationElements = document.querySelectorAll('.conversation');
-let transparentOverlay = document.getElementById('transparent-overlay');
+const transparentOverlay = document.getElementById('transparent-overlay');
 let buffer;
 let latestAIMessageElement = null;
 let uploadedImageUrl = null;
