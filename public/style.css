@@ -132,6 +132,12 @@ body {
     align-items: center;
 }
 
+#send-button.ai-responding {
+    background: #bbb; /* Gray background */
+    color: #666; /* Gray text color */
+    cursor: default; /* Default cursor to indicate it's not clickable */
+}
+
 #expander-button {
     display: none;
 }
@@ -541,9 +547,9 @@ body {
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    background-color: rgba(0, 0, 0, 0.6);
-    border-radius: 15px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    /* background-color: rgba(0, 0, 0, 0.6); */
+    /* border-radius: 15px; */
+    /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); */
     /* z-index: 100; */
     transition: opacity 0.3s ease-in-out;
     opacity: 0;
@@ -561,6 +567,7 @@ body {
 }
 
 #welcome-screen #typing-text {
+    text-align: center;
     font-size: 20px;
     color: var(--main-color);
     margin-top: 10px;

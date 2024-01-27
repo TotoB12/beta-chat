@@ -20,8 +20,8 @@ const main_color = "#eee";
 
 const anim_canvas = document.getElementById("animation");
 const ctx = anim_canvas.getContext("2d");
-anim_canvas.width = 350;
-anim_canvas.height = 140;
+anim_canvas.width = 700; // 350
+anim_canvas.height = 280; // 140
 const anim_params = {
   pointsNumber: 40,
   widthFactor: 0.3,
@@ -69,6 +69,16 @@ function updateChatBoxVisibility() {
   }
 }
 
+function updateSendButtonState() {
+  if (isAIResponding) {
+      sendButton.classList.add('ai-responding');
+      sendButton.innerHTML = '<span class="material-symbols-outlined">stop_circle</span>';
+  } else {
+      sendButton.classList.remove('ai-responding');
+      sendButton.innerHTML = '<span class="material-symbols-outlined">arrow_upward_alt</span>'; // Replace with your original send button content
+  }
+}
+
 function typeText(elementId, text, typingSpeed = 50) {
   const element = document.getElementById(elementId);
   let charIndex = 0;
@@ -76,7 +86,11 @@ function typeText(elementId, text, typingSpeed = 50) {
 
   function typing() {
     if (charIndex < text.length) {
-      element.innerHTML += text.charAt(charIndex);
+      if (text.charAt(charIndex) === '\n') {
+        element.innerHTML += '<br>';
+      } else {
+        element.innerHTML += text.charAt(charIndex);
+      }
       charIndex++;
       setTimeout(typing, typingSpeed);
     }
@@ -304,11 +318,11 @@ function updateMenuWithConversations() {
           : fourthMessage;
 
       const menuItem = document.createElement("li");
-      menuItem.className = "conversation"; // Add this line
-      menuItem.dataset.uuid = key; // Store the UUID in a data attribute
+      menuItem.className = "conversation";
+      menuItem.dataset.uuid = key;
 
       menuItem.addEventListener('click', function () {
-        loadConversation(this.dataset.uuid); // Load the conversation when clicked
+        loadConversation(this.dataset.uuid);
       });
 
       const titleContainer = document.createElement("div");
@@ -484,7 +498,9 @@ function startWebSocket() {
     updateConnectionStatus("online");
     sendPing();
     sendButton.addEventListener("click", sendMessage);
-    enableUserInput();
+    inputField.addEventListener("keydown", handleEnterKeyPress);
+    isAIResponding = false;
+    // enableUserInput();
     startHeartbeat();
   };
 
@@ -495,6 +511,10 @@ function startWebSocket() {
       if (data.type === "pong") {
         const latency = Date.now() - lastPingTimestamp;
         updatePingDisplay(latency);
+      }
+
+      if (data.conversationUUID !== currentConversationUUID) {
+        return;
       }
 
       if (data.type === "error") {
@@ -512,7 +532,9 @@ function startWebSocket() {
             true,
           );
         }
-        enableUserInput();
+        // enableUserInput();
+        isAIResponding = false;
+        updateSendButtonState();
         return;
       }
     } catch (e) {
@@ -541,6 +563,9 @@ function updatePingDisplay(latency) {
 }
 
 function processAIResponse(message, isError = false) {
+  if (!currentConversationUUID) {
+    return;
+  }
   if (!latestAIMessageElement) {
     latestAIMessageElement = document.createElement("div");
     latestAIMessageElement.className = isError
@@ -580,7 +605,11 @@ function processAIResponse(message, isError = false) {
 function sendMessage() {
   const userText = inputField.value.trim();
   if (userText.length > 60000) {
-    alert("Character limit exceeded. Please shorten your message.");
+    displayNotification("Character limit exceeded. Please shorten your message.", "error");
+    return;
+  }
+  if (isAIResponding) {
+    displayNotification("AI is processing a response. Please wait.");
     return;
   }
   if (userText === "" || isAIResponding) return;
@@ -614,7 +643,9 @@ function sendMessage() {
   uploadedImageUrl = null;
   uploadedImage = null;
   ws.send(JSON.stringify(message));
-  disableUserInput();
+  isAIResponding = true;
+  updateSendButtonState();
+  // disableUserInput();
   wrapCodeElements();
 }
 
@@ -646,17 +677,17 @@ document.getElementById("image-modal").addEventListener("click", function (e) {
   this.classList.remove("show-modal");
 });
 
-function disableUserInput() {
-  sendButton.disabled = true;
-  inputField.removeEventListener("keydown", handleEnterKeyPress);
-  isAIResponding = true;
-}
+// function disableUserInput() {
+//   sendButton.disabled = true;
+//   inputField.removeEventListener("keydown", handleEnterKeyPress);
+//   isAIResponding = true;
+// }
 
-function enableUserInput() {
-  sendButton.disabled = false;
-  inputField.addEventListener("keydown", handleEnterKeyPress);
-  isAIResponding = false;
-}
+// function enableUserInput() {
+//   sendButton.disabled = false;
+//   inputField.addEventListener("keydown", handleEnterKeyPress);
+//   isAIResponding = false;
+// }
 
 function handleEnterKeyPress(event) {
   if (event.key === "Enter" && !event.shiftKey) {
@@ -832,6 +863,11 @@ function resetConversation() {
   window.history.pushState(null, null, "/");
   updateMenuWithConversations();
   updateChatBoxVisibility();
+  isAIResponding = false;
+  updateSendButtonState();
+
+  // this is not a good solution -> find a way to discardthe current flow of ai messages
+  window.location.href = "/";
 }
 
 newChatButton.addEventListener("click", function () {
@@ -1004,15 +1040,13 @@ function validateFile(file) {
 
 function displayNotification(message, type) {
   const notificationArea = document.getElementById("notification-area");
-  notificationArea.innerHTML = ""; // Clear existing content
+  notificationArea.innerHTML = "";
 
   const icon = document.createElement("span");
   icon.className = "material-symbols-outlined";
 
-  // Set color based on type, default to main_color for unknown types
   const color = type === "error" ? "red" : (type === "info" ? "green" : main_color);
 
-  // Set icon and text color
   icon.style.color = color;
   icon.textContent = type === "error" ? "error" : "info";
 
