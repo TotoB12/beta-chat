@@ -1,6 +1,7 @@
 const chatBox = document.getElementById("chat-box");
 const inputField = document.getElementById("chat-input");
 const sendButton = document.getElementById("send-button");
+const uploadButton = document.getElementById("upload-button");
 const newChatButton = document.getElementById("newChatButton");
 const deleteAllButton = document.getElementById("deleteAllButton");
 const expanderButton = document.getElementById("expander-button");
@@ -613,6 +614,8 @@ function sendMessage() {
   const userText = inputField.value.trim();
   if (currentUploadXHR && currentUploadXHR.readyState !== XMLHttpRequest.DONE) {
     displayNotification("Please wait until the image upload is complete.", "data");
+    sendButton.classList.add("shake");
+    setTimeout(() => sendButton.classList.remove("shake"), 120);
     return;
   }
   if (userText.length > 60000) {
@@ -621,9 +624,14 @@ function sendMessage() {
   }
   if (isAIResponding) {
     displayNotification("AI is processing a response. Please wait.");
+    sendButton.classList.add("shake");
+    setTimeout(() => sendButton.classList.remove("shake"), 120);
     return;
   }
   if (userText === "" || isAIResponding) {
+    displayNotification("Please enter a message.", "error");
+    sendButton.classList.add("shake");
+    setTimeout(() => sendButton.classList.remove("shake"), 120);
     return;
   }
 
@@ -902,6 +910,8 @@ function upload(file) {
       "Invalid file format. Please select an image.",
       "error",
     );
+    uploadButton.classList.add("shake");
+    setTimeout(() => uploadButton.classList.remove("shake"), 120);
     resetUploadButton();
     return;
   }
@@ -912,6 +922,8 @@ function upload(file) {
       "File size exceeds 3MB. Please select a smaller image.",
       "error",
     );
+    uploadButton.classList.add("shake");
+    setTimeout(() => uploadButton.classList.remove("shake"), 120);
     resetUploadButton();
     return;
   }
@@ -1045,6 +1057,8 @@ document.getElementById("file-input").addEventListener("change", function () {
         "Invalid file. Please select an image (PNG, JPEG, WEBM, HEIC, HEIF) under 3MB.",
         "error",
       );
+      uploadButton.classList.add("shake");
+      setTimeout(() => uploadButton.classList.remove("shake"), 120);
     }
   }
 });
@@ -1131,6 +1145,8 @@ function handleDrop(e) {
         "Invalid file. Please select an image (PNG, JPEG, WEBM, HEIC, HEIF) under 3MB.",
         "error",
       );
+      uploadButton.classList.add("shake");
+      setTimeout(() => uploadButton.classList.remove("shake"), 120);
     }
   }
 }
