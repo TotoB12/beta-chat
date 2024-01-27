@@ -1,0 +1,1 @@
+reset the conversation when an answer is being generated -> this is not a good solution -> find a way to discard the current flow of ai messages

@@ -866,8 +866,8 @@ function resetConversation() {
   isAIResponding = false;
   updateSendButtonState();
 
-  // this is not a good solution -> find a way to discardthe current flow of ai messages
-  window.location.href = "/";
+  // this is not a good solution -> find a way to discard the current flow of ai messages
+  // window.location.href = "/";
 }
 
 newChatButton.addEventListener("click", function () {
