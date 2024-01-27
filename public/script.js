@@ -496,13 +496,6 @@ window.onload = function () {
   update_anim(0);
   updateMenuWithConversations();
   wrapCodeElements();
-  // deleteAllButton.addEventListener("click", deleteAllConversations);
-  deleteAllButton.addEventListener("click", function () {
-    if (this.classList.contains('disabled') === true) {
-      this.classList.add("shake");
-      setTimeout(() => this.classList.remove("shake"), 120);
-    }
-  });
 };
 
 function startWebSocket() {
@@ -835,6 +828,13 @@ function scrollToBottomOfTextarea() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  // deleteAllButton.addEventListener("click", deleteAllConversations);
+  deleteAllButton.addEventListener("click", function () {
+    if (this.classList.contains('disabled') === true) {
+      this.classList.add("shake");
+      setTimeout(() => this.classList.remove("shake"), 120);
+    }
+  });
 
   expanderButton.addEventListener("click", toggleTextareaExpansion);
 
