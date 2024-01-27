@@ -71,11 +71,11 @@ function updateChatBoxVisibility() {
 
 function updateSendButtonState() {
   if (isAIResponding) {
-      sendButton.classList.add('ai-responding');
-      sendButton.innerHTML = '<span class="material-symbols-outlined">stop_circle</span>';
+    sendButton.classList.add('ai-responding');
+    sendButton.innerHTML = '<span class="material-symbols-outlined">stop_circle</span>';
   } else {
-      sendButton.classList.remove('ai-responding');
-      sendButton.innerHTML = '<span class="material-symbols-outlined">arrow_upward_alt</span>'; // Replace with your original send button content
+    sendButton.classList.remove('ai-responding');
+    sendButton.innerHTML = '<span class="material-symbols-outlined">arrow_upward_alt</span>'; // Replace with your original send button content
   }
 }
 
@@ -380,7 +380,7 @@ function deleteConversation(uuid) {
   }
   if (!checkForConversations() && menuToggleCheckbox.checked) {
     menuToggleCheckbox.click();
-  }  
+  }
 }
 
 function deleteImageFromImgur(deletehash) {
@@ -398,7 +398,7 @@ function deleteImageFromImgur(deletehash) {
 }
 
 function deleteAllConversations() {
-  if(confirm("Are you sure you want to delete all conversations?")) {
+  if (confirm("Are you sure you want to delete all conversations?")) {
     const keysToDelete = [];
 
     for (let i = 0; i < localStorage.length; i++) {
@@ -513,10 +513,6 @@ function startWebSocket() {
         updatePingDisplay(latency);
       }
 
-      if (data.conversationUUID !== currentConversationUUID) {
-        return;
-      }
-
       if (data.type === "error") {
         processAIResponse(data.text, true);
       }
@@ -563,9 +559,6 @@ function updatePingDisplay(latency) {
 }
 
 function processAIResponse(message, isError = false) {
-  if (!currentConversationUUID) {
-    return;
-  }
   if (!latestAIMessageElement) {
     latestAIMessageElement = document.createElement("div");
     latestAIMessageElement.className = isError
