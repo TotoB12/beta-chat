@@ -437,7 +437,7 @@ body {
 #deleteAllButton {
     background: none;
     border: none;
-    color: #fff;
+    color: var(--main-color);
     cursor: pointer;
     margin-right: 10px;
   }

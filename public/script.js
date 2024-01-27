@@ -352,9 +352,6 @@ function deleteConversation(uuid) {
   updateMenuWithConversations();
   if (currentConversationUUID === uuid) {
     resetConversation();
-    // if (menuToggleCheckbox.checked) {
-    //   menuToggleCheckbox.click();
-    // }
   }
 }
 
@@ -387,6 +384,9 @@ function deleteAllConversations() {
     keysToDelete.forEach(key => deleteConversation(key));
 
     updateMenuWithConversations();
+    if (menuToggleCheckbox.checked) {
+      menuToggleCheckbox.click();
+    }
   }
 }
 
