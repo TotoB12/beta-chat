@@ -26,7 +26,7 @@ anim_canvas.height = 280; // 140
 const anim_params = {
   pointsNumber: 40,
   widthFactor: 0.3,
-  mouseThreshold: 0.6,
+  mouseThreshold: 100, // 0.6
   spring: 0.4,
   friction: 0.5,
 };
@@ -471,7 +471,6 @@ function simulateButtonHover() {
 }
 
 window.onload = function () {
-  startWebSocket();
   hljs.configure({ languages: [] });
   const path = window.location.pathname;
   const pathParts = path.split("/");
@@ -828,7 +827,7 @@ function scrollToBottomOfTextarea() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  // deleteAllButton.addEventListener("click", deleteAllConversations);
+  startWebSocket();
   deleteAllButton.addEventListener("click", function () {
     if (this.classList.contains('disabled') === true) {
       this.classList.add("shake");
