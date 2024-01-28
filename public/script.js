@@ -26,7 +26,7 @@ anim_canvas.height = 280; // 140
 const anim_params = {
   pointsNumber: 40,
   widthFactor: 0.3,
-  mouseThreshold: 100, // 0.6
+  mouseThreshold: 0.6, // 0.6
   spring: 0.4,
   friction: 0.5,
 };
@@ -1105,7 +1105,7 @@ function displayNotification(message, type, duration = 2000) {
   const icon = document.createElement("span");
   icon.className = "material-symbols-outlined";
 
-  const color = type === "error" ? "red" : (type === "info" ? "green" : main_color);
+  const color = type === "error" ? "red" : (type === "info" ? "#00d26a" : main_color);
 
   icon.style.color = color;
   icon.textContent = type === "error" ? "error" : "info";
@@ -1153,22 +1153,67 @@ function unhighlight(e) {
 
 function handleDrop(e) {
   let dt = e.dataTransfer;
-  let { files } = dt;
+  let {items} = dt;
 
-  if (files.length) {
-    const file = files[0];
-    if (validateFile(file)) {
-      displayLocalImagePreview(file);
-      upload(file);
-    } else {
-      displayNotification(
-        "Invalid file. Please select an image (PNG, JPEG, WEBM, HEIC, HEIF) under 3MB.",
-        "error",
-      );
-      uploadButton.classList.add("shake");
-      setTimeout(() => uploadButton.classList.remove("shake"), 120);
+  if (items && items.length) {
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].kind === 'file') {
+        let file = items[i].getAsFile();
+        handleFile(file);
+      } else if (items[i].kind === 'string' && items[i].type === 'text/uri-list') {
+        items[i].getAsString((url) => {
+          fetchImageFromUrl(url)
+            .then(file => handleFile(file))
+            .catch(error => {
+              displayNotification("Failed to fetch image from URL.", "error");
+            });
+        });
+      }
+    }
+  } else {
+    // Use DataTransfer interface to access the file(s)
+    let {files} = dt;
+    for (let i = 0; i < files.length; i++) {
+      handleFile(files[i]);
     }
   }
+}
+
+function handleFile(file) {
+  if (validateFile(file)) {
+    displayLocalImagePreview(file);
+    upload(file);
+  } else {
+    displayNotification(
+      "Invalid file. Please select an image (PNG, JPEG, WEBM, HEIC, HEIF) under 3MB.",
+      "error",
+    );
+    uploadButton.classList.add("shake");
+    setTimeout(() => uploadButton.classList.remove("shake"), 120);
+  }
+}
+
+function fetchImageFromUrl(url) {
+  const corsProxy = 'https://cors-anywhere.herokuapp.com/';
+  const proxiedUrl = corsProxy + url;
+
+  return new Promise((resolve, reject) => {
+    fetch(proxiedUrl)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.blob();
+      })
+      .then(blob => {
+        let file = new File([blob], "image.jpg", { type: "image/jpeg" });
+        resolve(file);
+      })
+      .catch(e => {
+        console.error("Error fetching image from URL:", e);
+        reject(e);
+      });
+  });
 }
 
 function handleFiles(files) {
