@@ -257,25 +257,29 @@ body {
 }
 
 .message {
-    padding: 10px;
+    padding: 10px 12px;
     margin-bottom: 15px;
-    border-radius: 4px;
+    border-radius: 10px;
     word-wrap: break-word;
     background-color: #333;
     color: var(--main-color);
+}
+
+.message p {
+    font-size: 1.1em;
 }
 
 .message-label {
     margin-bottom: 8px;
 }
 
-.user-message {
-    /* background-color: none; */
+/* .user-message {
+    background-color: none;
 }
 
 .ai-message {
-    /* background-color: #333; */
-}
+    background-color: #333;
+} */
 
 #menuToggle {
     display: block;

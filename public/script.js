@@ -88,6 +88,7 @@ function typeText(elementId, text, typingSpeed = 50) {
   let charIndex = 0;
   element.innerHTML = "";
 
+// sourcery skip: avoid-function-declarations-in-blocks
   function typing() {
     if (charIndex < text.length) {
       if (text.charAt(charIndex) === '\n') {
