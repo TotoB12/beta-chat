@@ -331,7 +331,7 @@ function updateMenuWithConversations() {
       titleContainer.textContent = truncatedTitle;
 
       const deleteButton = document.createElement("button");
-      deleteButton.innerHTML = '<span class="material-symbols-outlined">delete</span>';
+      deleteButton.innerHTML = '<span class="material-symbols-outlined" style="background: none;">delete</span>';
       deleteButton.className = "delete-conversation-button";
       deleteButton.onclick = (e) => {
         e.stopPropagation();
@@ -497,6 +497,18 @@ window.onload = function () {
   wrapCodeElements();
 };
 
+window.addEventListener('online', function(e) {
+  console.log('You are online');
+  startWebSocket();
+});
+
+window.addEventListener('offline', function(e) {
+  console.log('You are offline');
+  updateConnectionStatus("offline");
+  updatePingDisplay("--");
+  stopHeartbeat();
+});
+
 function startWebSocket() {
   ws = new WebSocket(`wss://${window.location.host}`);
 
@@ -548,10 +560,6 @@ function startWebSocket() {
 
   ws.onclose = function () {
     console.log("WebSocket Disconnected");
-    updateConnectionStatus("offline");
-    updatePingDisplay("--");
-    stopHeartbeat();
-    setTimeout(startWebSocket, 2000);
   };
 
   ws.onerror = function (error) {
@@ -948,6 +956,7 @@ function resetConversation() {
   updateChatBoxVisibility();
   isAIResponding = false;
   updateSendButtonState();
+  inputField.focus();
 
   // this is not a good solution -> find a way to discard the current flow of ai messages
   // window.location.href = "/";
