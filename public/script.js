@@ -6,6 +6,7 @@ const newChatButton = document.getElementById("newChatButton");
 const deleteAllButton = document.getElementById("deleteAllButton");
 const expanderButton = document.getElementById("expander-button");
 const menuToggleCheckbox = document.querySelector("#menuToggle input");
+const menu = document.getElementById("menu");
 const conversationElements = document.querySelectorAll('.conversation');
 const transparentOverlay = document.getElementById('transparent-overlay');
 let buffer;
@@ -18,6 +19,8 @@ let currentUploadXHR = null;
 let currentConversationUUID = null;
 let isNewConversation = false;
 const main_color = "#eee";
+const disabled_color = "#aaa";
+const hover_color = "#ddd";
 
 const anim_canvas = document.getElementById("animation");
 const ctx = anim_canvas.getContext("2d");
@@ -372,24 +375,31 @@ function checkForConversations() {
 }
 
 function deleteConversation(uuid) {
-  const conversation = JSON.parse(localStorage.getItem(uuid));
-  if (conversation) {
-    conversation.forEach(entry => {
-      if (entry.image && entry.image.deletehash) {
-        deleteImageFromImgur(entry.image.deletehash);
-      }
-    });
-  }
+  const conversationElement = document.querySelector(`.conversation[data-uuid="${uuid}"]`);
+  
+  conversationElement.classList.add('slide-away');
 
-  localStorage.removeItem(uuid);
-  updateMenuWithConversations();
-  if (currentConversationUUID === uuid) {
-    resetConversation();
-  }
-  if (!checkForConversations() && menuToggleCheckbox.checked) {
-    menuToggleCheckbox.click();
-  }
+  setTimeout(() => {
+      const conversation = JSON.parse(localStorage.getItem(uuid));
+      if (conversation) {
+          conversation.forEach(entry => {
+              if (entry.image && entry.image.deletehash) {
+                  deleteImageFromImgur(entry.image.deletehash);
+              }
+          });
+      }
+
+      localStorage.removeItem(uuid);
+      updateMenuWithConversations();
+      if (currentConversationUUID === uuid) {
+          resetConversation();
+      }
+      if (!checkForConversations() && menuToggleCheckbox.checked) {
+          menuToggleCheckbox.click();
+      }
+  }, 250);
 }
+
 
 function deleteImageFromImgur(deletehash) {
   const xhr = new XMLHttpRequest();
@@ -409,20 +419,35 @@ function deleteImageFromImgur(deletehash) {
 function deleteAllConversations() {
   if (confirm("Are you sure you want to delete all conversations?")) {
     const keysToDelete = [];
+    const conversationElements = document.querySelectorAll('.conversation');
 
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.includes("-")) {
-        keysToDelete.push(key);
+    // Apply the slide-away animation to each conversation
+    conversationElements.forEach(element => {
+      element.classList.add('slide-away');
+      keysToDelete.push(element.dataset.uuid);
+    });
+
+    setTimeout(() => {
+      keysToDelete.forEach(uuid => {
+        const conversation = JSON.parse(localStorage.getItem(uuid));
+        if (conversation) {
+          conversation.forEach(entry => {
+            if (entry.image && entry.image.deletehash) {
+              deleteImageFromImgur(entry.image.deletehash);
+            }
+          });
+        }
+        localStorage.removeItem(uuid);
+      });
+
+      updateMenuWithConversations();
+      if (menuToggleCheckbox.checked) {
+        menuToggleCheckbox.click();
       }
-    }
-
-    keysToDelete.forEach(key => deleteConversation(key));
-
-    updateMenuWithConversations();
-    if (menuToggleCheckbox.checked) {
-      menuToggleCheckbox.click();
-    }
+      if (currentConversationUUID) {
+        resetConversation();
+      }
+    }, 250);
   }
 }
 
@@ -848,8 +873,10 @@ document.addEventListener("DOMContentLoaded", function () {
   menuToggleCheckbox.addEventListener('change', function () {
     if (menuToggleCheckbox.checked) {
       transparentOverlay.style.display = 'block';
+      menu.style.boxShadow = '0px 0px 10px 0px black';
     } else {
       transparentOverlay.style.display = 'none';
+      menu.style.boxShadow = 'none';
     }
   });
 
