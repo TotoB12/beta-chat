@@ -76,7 +76,7 @@ function updateSendButtonState() {
     sendButton.innerHTML = '<span class="material-symbols-outlined">stop_circle</span>';
   } else {
     sendButton.classList.remove('ai-responding');
-    sendButton.innerHTML = '<span class="material-symbols-outlined">arrow_upward_alt</span>'; // Replace with your original send button content
+    sendButton.innerHTML = '<span class="material-symbols-outlined">arrow_upward_alt</span>';
   }
 }
 
@@ -1054,7 +1054,7 @@ function updateUploadButtonWithImage(imageUrl) {
 function resetUploadButton() {
   const imagePreview = document.getElementById("image-preview");
   const uploadButton = document.getElementById("upload-button");
-  const fileInput = document.getElementById("file-input"); // Get the file input element
+  const fileInput = document.getElementById("file-input");
   const imageLoadingIndicator = document.querySelector(".loading-indicator");
   const closePreview = document.querySelector(".close-icon");
 
@@ -1067,7 +1067,7 @@ function resetUploadButton() {
   uploadedImageUrl = null;
   uploadedImage = null;
 
-  fileInput.value = ""; // Reset the file input
+  fileInput.value = "";
 }
 
 
@@ -1171,7 +1171,6 @@ function handleDrop(e) {
       }
     }
   } else {
-    // Use DataTransfer interface to access the file(s)
     let {files} = dt;
     for (let i = 0; i < files.length; i++) {
       handleFile(files[i]);
