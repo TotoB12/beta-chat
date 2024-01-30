@@ -86,9 +86,9 @@ app.use((req, res, next) => {
 
 wss.on("connection", function connection(ws) {
   ws.on("message", async function incoming(messageBuffer) {
+    const messageData = JSON.parse(messageBuffer.toString());
+    const conversationUUID = messageData.uuid;
     try {
-      const messageData = JSON.parse(messageBuffer.toString());
-      const conversationUUID = messageData.uuid;
           if (messageData.type === "ping") {
         ws.send(JSON.stringify({ type: "pong" }));
         return;
@@ -128,7 +128,7 @@ wss.on("connection", function connection(ws) {
       }
 
       ws.send(
-        JSON.stringify({ type: "AI_COMPLETE", uniqueIdentifier: "7777" }),
+        JSON.stringify({ type: "AI_COMPLETE", uuid: conversationUUID, uniqueIdentifier: "7777" }),
       );
     } catch (error) {
       console.error(error);
@@ -140,9 +140,9 @@ wss.on("connection", function connection(ws) {
         blockReason = "Error: Unable to process the request.";
       }
 
-      ws.send(JSON.stringify({ type: "error", text: blockReason }));
+      ws.send(JSON.stringify({ type: "error", uuid: conversationUUID, text: blockReason }));
       ws.send(
-        JSON.stringify({ type: "AI_COMPLETE", uniqueIdentifier: "7777" }),
+        JSON.stringify({ type: "AI_COMPLETE", uuid: conversationUUID, uniqueIdentifier: "7777" }),
       );
     }
   });

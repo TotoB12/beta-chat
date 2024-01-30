@@ -555,6 +555,7 @@ function startWebSocket() {
       const data = JSON.parse(event.data);
 
       if (data.type === "AI_RESPONSE" && data.uuid === currentConversationUUID) {
+        console.log("UUID:", data.uuid);
             processAIResponse(data.text);
             wrapCodeElements();
       }
@@ -564,11 +565,12 @@ function startWebSocket() {
         updatePingDisplay(latency);
       }
 
-      if (data.type === "error") {
+      if (data.type === "error" && data.uuid === currentConversationUUID) {
         processAIResponse(data.text, true);
       }
 
       if (data.type === "AI_COMPLETE" && data.uniqueIdentifier === "7777") {
+        console.log("UUID:", data.uuid);
         if (
           latestAIMessageElement &&
           latestAIMessageElement.fullMessage.trim() !== ""
