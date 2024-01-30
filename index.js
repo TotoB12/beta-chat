@@ -114,11 +114,13 @@ wss.on("connection", function connection(ws) {
             model: "gemini-pro-vision",
             safetySettings,
             generationConfig,
+            stopSequences: ["TotoB12:"],
           })
         : genAI.getGenerativeModel({
             model: "gemini-pro",
             safetySettings,
             generationConfig,
+            stopSequences: ["TotoB12:"],
           });
 
       const result = await model.generateContentStream(promptParts);
