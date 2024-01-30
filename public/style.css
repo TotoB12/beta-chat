@@ -144,6 +144,32 @@ body {
     display: none;
 }
 
+@keyframes flyInFromUnder {
+    0% {
+        transform: translateY(100%);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+.fly-in-from-under {
+    animation: flyInFromUnder 0.5s ease;
+}
+
+@keyframes flyOutToUnder {
+    0% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(100%);
+    }
+}
+
+.fly-out-to-under {
+    animation: flyOutToUnder 0.5s ease;
+}
+
 #send-button:hover {
     background-color: var(--hover-color);
 }
@@ -160,12 +186,39 @@ body {
     text-align: center;
     word-wrap: break-word;
     display: block;
+    animation: fade 0.5s ease;
+}
+
+@keyframes fade {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
 }
 
 #char-count hr {
     margin: 0;
     border-top: 1px solid var(--main-color);
 }
+
+/* @keyframes slideAndFadeOut {
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+        scale: 1;
+    }
+    100% {
+        transform: translateX(-300px);
+        opacity: 0;
+        scale: 0.5;
+    }
+} */
+
+/* .slide-away {
+    animation: slideAndFadeOut 0.25s ease forwards;
+} */
 
 #upload-button {
     background: var(--main-color);
@@ -216,7 +269,7 @@ body {
     height: 20px;
     border: 3px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
-    border-top: 3px solid #fff;
+    border-top: 3px solid var(--main-color);
     animation: spin 1s linear infinite;
     position: absolute;
     top: 10px;

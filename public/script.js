@@ -4,6 +4,7 @@ const sendButton = document.getElementById("send-button");
 const uploadButton = document.getElementById("upload-button");
 const newChatButton = document.getElementById("newChatButton");
 const deleteAllButton = document.getElementById("deleteAllButton");
+const charCountElement = document.getElementById("char-count");
 const expanderButton = document.getElementById("expander-button");
 const menuToggleCheckbox = document.querySelector("#menuToggle input");
 const menu = document.getElementById("menu");
@@ -170,7 +171,6 @@ function checkImageInHistory() {
 
 function updateCharacterCount() {
   const charCount = inputField.value.length;
-  const charCountElement = document.getElementById("char-count");
 
   const imagePresent = checkImageInHistory() || uploadedImageUrl;
   const charLimit = imagePresent ? 24000 : 60000;
@@ -734,6 +734,7 @@ document.getElementById("image-modal").addEventListener("click", function (e) {
     return;
   }
   this.classList.remove("show-modal");
+  inputField.focus();
 });
 
 // function disableUserInput() {
@@ -979,8 +980,6 @@ function resetTextarea() {
   textarea.style.overflowY = "hidden";
 }
 
-
-
 function resetConversation() {
   uploadedImageUrl = null;
   uploadedImage = null;
@@ -999,8 +998,6 @@ function resetConversation() {
   // this is not a good solution -> find a way to discard the current flow of ai messages
   // window.location.href = "/";
 }
-
-
 
 function upload(file) {
   if (!file || !file.type.match(/image.*/)) {
