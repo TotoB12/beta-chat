@@ -89,7 +89,7 @@ function typeText(elementId, text, typingSpeed = 50) {
   let charIndex = 0;
   element.innerHTML = "";
 
-// sourcery skip: avoid-function-declarations-in-blocks
+  // sourcery skip: avoid-function-declarations-in-blocks
   function typing() {
     if (charIndex < text.length) {
       if (text.charAt(charIndex) === '\n') {
@@ -377,27 +377,27 @@ function checkForConversations() {
 
 function deleteConversation(uuid) {
   const conversationElement = document.querySelector(`.conversation[data-uuid="${uuid}"]`);
-  
+
   conversationElement.classList.add('slide-away');
 
   setTimeout(() => {
-      const conversation = JSON.parse(localStorage.getItem(uuid));
-      if (conversation) {
-          conversation.forEach(entry => {
-              if (entry.image && entry.image.deletehash) {
-                  deleteImageFromImgur(entry.image.deletehash);
-              }
-          });
-      }
+    const conversation = JSON.parse(localStorage.getItem(uuid));
+    if (conversation) {
+      conversation.forEach(entry => {
+        if (entry.image && entry.image.deletehash) {
+          deleteImageFromImgur(entry.image.deletehash);
+        }
+      });
+    }
 
-      localStorage.removeItem(uuid);
-      updateMenuWithConversations();
-      if (currentConversationUUID === uuid) {
-          resetConversation();
-      }
-      if (!checkForConversations() && menuToggleCheckbox.checked) {
-          menuToggleCheckbox.click();
-      }
+    localStorage.removeItem(uuid);
+    updateMenuWithConversations();
+    if (currentConversationUUID === uuid) {
+      resetConversation();
+    }
+    if (!checkForConversations() && menuToggleCheckbox.checked) {
+      menuToggleCheckbox.click();
+    }
   }, 250);
 }
 
@@ -523,12 +523,12 @@ window.onload = function () {
   wrapCodeElements();
 };
 
-window.addEventListener('online', function(e) {
+window.addEventListener('online', function (e) {
   console.log('You are online');
   startWebSocket();
 });
 
-window.addEventListener('offline', function(e) {
+window.addEventListener('offline', function (e) {
   console.log('You are offline');
   updateConnectionStatus("offline");
   updatePingDisplay("--");
@@ -556,8 +556,8 @@ function startWebSocket() {
 
       if (data.type === "AI_RESPONSE" && data.uuid === currentConversationUUID) {
         console.log("UUID:", data.uuid);
-            processAIResponse(data.text);
-            wrapCodeElements();
+        processAIResponse(data.text);
+        wrapCodeElements();
       }
 
       if (data.type === "pong") {
@@ -676,7 +676,7 @@ function sendMessage() {
     text: userText,
     image: uploadedImage,
   };
-  
+
 
   updateHistory("user", userText, false, uploadedImage);
   createUserMessage({ role: "user", parts: userText, error: false, image: uploadedImage });
@@ -1197,7 +1197,7 @@ function unhighlight(e) {
 
 function handleDrop(e) {
   let dt = e.dataTransfer;
-  let {items} = dt;
+  let { items } = dt;
 
   if (items && items.length) {
     for (let i = 0; i < items.length; i++) {
@@ -1215,7 +1215,7 @@ function handleDrop(e) {
       }
     }
   } else {
-    let {files} = dt;
+    let { files } = dt;
     for (let i = 0; i < files.length; i++) {
       handleFile(files[i]);
     }
