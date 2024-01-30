@@ -88,7 +88,8 @@ wss.on("connection", function connection(ws) {
   ws.on("message", async function incoming(messageBuffer) {
     try {
       const messageData = JSON.parse(messageBuffer.toString());
-      if (messageData.type === "ping") {
+      const conversationUUID = messageData.uuid;
+          if (messageData.type === "ping") {
         ws.send(JSON.stringify({ type: "pong" }));
         return;
       }
@@ -123,8 +124,7 @@ wss.on("connection", function connection(ws) {
       const result = await model.generateContentStream(promptParts);
 
       for await (const chunk of result.stream) {
-        ws.send(chunk.text());
-        // console.log(chunk.text());
+        ws.send(JSON.stringify({ type: "AI_RESPONSE", uuid: conversationUUID, text: chunk.text() }));
       }
 
       ws.send(

@@ -414,7 +414,7 @@ function deleteImageFromImgur(deletehash) {
     }
   };
   xhr.send();
-  displayNotification("Image(s) deleted", "data", 1000);
+  displayNotification("Conversation(s) & Image(s) deleted", "data", 1000);
 }
 
 function deleteAllConversations() {
@@ -550,8 +550,14 @@ function startWebSocket() {
   };
 
   ws.onmessage = function (event) {
+    console.log("WebSocket Message:", event.data);
     try {
       const data = JSON.parse(event.data);
+
+      if (data.type === "AI_RESPONSE" && data.uuid === currentConversationUUID) {
+            processAIResponse(data.text);
+            wrapCodeElements();
+      }
 
       if (data.type === "pong") {
         const latency = Date.now() - lastPingTimestamp;
@@ -579,8 +585,8 @@ function startWebSocket() {
         return;
       }
     } catch (e) {
-      processAIResponse(event.data);
-      wrapCodeElements();
+      // processAIResponse(event.data);
+      // wrapCodeElements();
     }
   };
 
@@ -663,10 +669,12 @@ function sendMessage() {
 
   const message = {
     type: "user-message",
+    uuid: currentConversationUUID,
     history: getHistory(),
     text: userText,
     image: uploadedImage,
   };
+  
 
   updateHistory("user", userText, false, uploadedImage);
   createUserMessage({ role: "user", parts: userText, error: false, image: uploadedImage });
