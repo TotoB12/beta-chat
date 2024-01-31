@@ -402,6 +402,9 @@ body {
     position: fixed;
     width: 300px;
     height: 100%;
+    max-height: 100vh; /* 100vh */
+    box-sizing: border-box;
+    overflow-y: auto;
     margin: 0;
     padding: 60px 10px;
     /* padding-top: 60px; */
@@ -745,12 +748,12 @@ code.hljs {
     cursor: pointer;
 }
 
-.no-conversations-message {
+.no-conversations-message, .conversation-message {
     color: var(--main-color);
     padding: 15px 20px;
     text-align: center;
 }
 
-.no-conversations-message p {
+.no-conversations-message p, .conversation-message p {
     margin: 5px 0;
 }

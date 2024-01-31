@@ -25,8 +25,11 @@ const hover_color = "#ddd";
 
 const anim_canvas = document.getElementById("animation");
 const ctx = anim_canvas.getContext("2d");
-anim_canvas.width = 700; // 350
-anim_canvas.height = 280; // 140
+const chatBoxStyle = window.getComputedStyle(chatBox);
+anim_canvas.width = window.innerWidth-10;
+// anim_canvas.height = window.innerHeight;
+// anim_canvas.width = 1400;
+anim_canvas.height = 280;
 const anim_params = {
   pointsNumber: 40,
   widthFactor: 0.3,
@@ -362,6 +365,11 @@ function updateMenuWithConversations() {
     deleteAllButton.removeEventListener("click", deleteAllConversations);
     deleteAllButton.classList.add('disabled');
   } else {
+    // const ConversationsMessage = document.createElement("div");
+    // ConversationsMessage.className = "conversation-message";
+    // ConversationsMessage.innerHTML = `<p>haaaaaaaaaa</p>`;
+    // menu.appendChild(ConversationsMessage);
+
     deleteAllButton.addEventListener("click", deleteAllConversations);
     deleteAllButton.classList.remove('disabled');
   }
@@ -1300,7 +1308,7 @@ for (let i = 0; i < anim_params.pointsNumber; i++) {
 function update_anim(t) {
   let mouseX, mouseY;
   if (useSimulatedMouse) {
-    const radius = anim_canvas.height / 2;
+    const radius = 125;
     const angle = t * 0.002;
     const centerX = anim_canvas.width / 2;
     const centerY = anim_canvas.height / 2;
