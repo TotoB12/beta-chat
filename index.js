@@ -11,6 +11,7 @@ const {
   HarmBlockThreshold,
   HarmCategory,
 } = require("@google/generative-ai");
+const { v4: uuidv4 } = require('uuid');
 const connectionStates = new Map();
 let connectionCounter = 0;
 
@@ -87,7 +88,7 @@ app.use((req, res, next) => {
 });
 
 wss.on("connection", function connection(ws) {
-  const connectionId = generateUniqueConnectionId(); // You need to implement this function
+  const connectionId = generateUniqueConnectionUUID();
   connectionStates.set(connectionId, { continueStreaming: true });
 
   ws.on("message", async function incoming(messageBuffer) {
@@ -95,7 +96,6 @@ wss.on("connection", function connection(ws) {
     const conversationUUID = messageData.uuid;
     try {
       if (messageData.type === "stop_ai_response") {
-        // Stop sending the AI response for this connection
         console.log("Stopping AI response for connection:", connectionId);
         connectionStates.set(connectionId, { continueStreaming: false });
         return;
@@ -140,7 +140,7 @@ wss.on("connection", function connection(ws) {
       for await (const chunk of result.stream) {
         if (!connectionStates.get(connectionId).continueStreaming) {
           console.log("Stopped streaming AI response for connection:", connectionId);
-          break; // Exit the loop if streaming should be stopped
+          break;
         }
         ws.send(JSON.stringify({ type: "AI_RESPONSE", uuid: conversationUUID, text: chunk.text() }));
       }  
@@ -164,13 +164,16 @@ wss.on("connection", function connection(ws) {
     }
   });
   ws.on("close", () => {
-    // Remove the connection state when the WebSocket connection is closed
     connectionStates.delete(connectionId);
   });
 });
 
-function generateUniqueConnectionId() {
-  return `connection-${++connectionCounter}`;
+function generateUniqueConnectionUUID() {
+  let uuid = uuidv4();
+  while (connectionStates.has(uuid)) {
+    uuid = uuidv4();
+  }
+  return uuid;
 }
 
 function wasMessageBlockedByAI(history, imageMessageIndex) {
