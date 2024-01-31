@@ -78,9 +78,11 @@ function updateSendButtonState() {
   if (isAIResponding) {
     sendButton.classList.add('ai-responding');
     sendButton.innerHTML = '<span class="material-symbols-outlined">stop_circle</span>';
+    // sendButton.style.backgroundColor = disabled_color;
   } else {
     sendButton.classList.remove('ai-responding');
     sendButton.innerHTML = '<span class="material-symbols-outlined">arrow_upward_alt</span>';
+    // sendButton.style.backgroundColor = main_color;
   }
 }
 
@@ -542,7 +544,17 @@ function startWebSocket() {
     console.log("WebSocket Connected");
     updateConnectionStatus("online");
     sendPing();
-    sendButton.addEventListener("click", sendMessage);
+    sendButton.addEventListener("click", function () {
+      if (this.classList.contains('ai-responding') === true) {
+        stopAIResponse(currentConversationUUID);
+      } else if (this.classList.contains('disabled') === true) {
+        // do something
+      } else if (!isAIResponding) {
+        sendMessage();
+      } else {
+        displayNotification("Error: Please refresh the page.", "error");
+      }
+    });
     inputField.addEventListener("keydown", handleEnterKeyPress);
     isAIResponding = false;
     // enableUserInput();
@@ -644,8 +656,22 @@ function processAIResponse(message, isError = false) {
   wrapCodeElements();
 }
 
+function stopAIResponse(uuid) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: "stop_ai_response", uuid: uuid }));
+    isAIResponding = false;
+    updateSendButtonState();
+    return;
+  } else {
+    console.error("WebSocket not connected");
+    displayNotification("App not connected, please refresh.", "error");
+    return;
+  }
+}
+
 function sendMessage() {
   const userText = inputField.value.trim();
+
   if (currentUploadXHR && currentUploadXHR.readyState !== XMLHttpRequest.DONE) {
     displayNotification("Please wait until the image upload is complete.", "data");
     sendButton.classList.add("shake");
@@ -676,7 +702,6 @@ function sendMessage() {
     text: userText,
     image: uploadedImage,
   };
-
 
   updateHistory("user", userText, false, uploadedImage);
   createUserMessage({ role: "user", parts: userText, error: false, image: uploadedImage });

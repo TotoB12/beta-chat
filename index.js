@@ -11,6 +11,8 @@ const {
   HarmBlockThreshold,
   HarmCategory,
 } = require("@google/generative-ai");
+const connectionStates = new Map();
+let connectionCounter = 0;
 
 const app = express();
 const server = http.createServer(app);
@@ -85,11 +87,21 @@ app.use((req, res, next) => {
 });
 
 wss.on("connection", function connection(ws) {
+  const connectionId = generateUniqueConnectionId(); // You need to implement this function
+  connectionStates.set(connectionId, { continueStreaming: true });
+
   ws.on("message", async function incoming(messageBuffer) {
     const messageData = JSON.parse(messageBuffer.toString());
     const conversationUUID = messageData.uuid;
     try {
-          if (messageData.type === "ping") {
+      if (messageData.type === "stop_ai_response") {
+        // Stop sending the AI response for this connection
+        console.log("Stopping AI response for connection:", connectionId);
+        connectionStates.set(connectionId, { continueStreaming: false });
+        return;
+      }
+
+      if (messageData.type === "ping") {
         ws.send(JSON.stringify({ type: "pong" }));
         return;
       }
@@ -111,27 +123,30 @@ wss.on("connection", function connection(ws) {
 
       const model = hasImage
         ? genAI.getGenerativeModel({
-            model: "gemini-pro-vision",
-            safetySettings,
-            generationConfig,
-            stopSequences: ["TotoB12:"],
-          })
+          model: "gemini-pro-vision",
+          safetySettings,
+          generationConfig,
+          stopSequences: ["TotoB12:"],
+        })
         : genAI.getGenerativeModel({
-            model: "gemini-pro",
-            safetySettings,
-            generationConfig,
-            stopSequences: ["TotoB12:"],
-          });
+          model: "gemini-pro",
+          safetySettings,
+          generationConfig,
+          stopSequences: ["TotoB12:"],
+        });
 
       const result = await model.generateContentStream(promptParts);
 
       for await (const chunk of result.stream) {
+        if (!connectionStates.get(connectionId).continueStreaming) {
+          console.log("Stopped streaming AI response for connection:", connectionId);
+          break; // Exit the loop if streaming should be stopped
+        }
         ws.send(JSON.stringify({ type: "AI_RESPONSE", uuid: conversationUUID, text: chunk.text() }));
-      }
+      }  
 
-      ws.send(
-        JSON.stringify({ type: "AI_COMPLETE", uuid: conversationUUID, uniqueIdentifier: "7777" }),
-      );
+    connectionStates.set(connectionId, { continueStreaming: true });
+    ws.send(JSON.stringify({ type: "AI_COMPLETE", uuid: conversationUUID, uniqueIdentifier: "7777" }));
     } catch (error) {
       console.error(error);
 
@@ -148,7 +163,15 @@ wss.on("connection", function connection(ws) {
       );
     }
   });
+  ws.on("close", () => {
+    // Remove the connection state when the WebSocket connection is closed
+    connectionStates.delete(connectionId);
+  });
 });
+
+function generateUniqueConnectionId() {
+  return `connection-${++connectionCounter}`;
+}
 
 function wasMessageBlockedByAI(history, imageMessageIndex) {
   if (history.length > imageMessageIndex + 1) {
@@ -215,12 +238,12 @@ async function urlToGenerativePart(
   wasBlocked = false,
 ) {
   // not that great of a way to do this, but it works
-  imageUrl = imageUrl.replace("i.imgur.com", "imgin.voidnet.tech");
-  console.log(imageUrl);
+  proxyedImageUrl = imageUrl.replace("i.imgur.com", "imgin.voidnet.tech");
+  console.log(proxyedImageUrl);
   try {
     // console.log(wasBlocked);
     if (wasBlocked === false) {
-      const response = await fetch(imageUrl);
+      const response = await fetch(proxyedImageUrl);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

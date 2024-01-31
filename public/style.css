@@ -135,9 +135,16 @@ body {
 }
 
 #send-button.ai-responding {
-    background: #bbb;
-    color: #666;
-    cursor: default;
+    /* background: var(--hover-color); */
+    color: black;
+}
+
+/* #send-button.ai-responding:hover{
+    background-color: var(--hover-color);
+} */
+
+#send-button:hover {
+    background-color: var(--hover-color);
 }
 
 #expander-button {
@@ -168,14 +175,6 @@ body {
 
 .fly-out-to-under {
     animation: flyOutToUnder 0.5s ease;
-}
-
-#send-button:hover {
-    background-color: var(--hover-color);
-}
-
-#send-button.hover-effect {
-    background-color: var(--hover-color);
 }
 
 #char-count {
