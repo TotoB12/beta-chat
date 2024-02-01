@@ -26,10 +26,6 @@ const hover_color = "#ddd";
 const anim_canvas = document.getElementById("animation");
 const ctx = anim_canvas.getContext("2d");
 const chatBoxStyle = window.getComputedStyle(chatBox);
-anim_canvas.width = window.innerWidth-10;
-// anim_canvas.height = window.innerHeight;
-// anim_canvas.width = 1400;
-anim_canvas.height = 280;
 const anim_params = {
   pointsNumber: 40,
   widthFactor: 0.3,
@@ -45,6 +41,13 @@ let userMouseY = 0;
 let ws;
 let pingInterval;
 const imgurClientId = '6a8a51f3d7933e1';
+
+function updateAnimationSize() {
+  anim_canvas.width = window.innerWidth;
+  // anim_canvas.height = window.innerHeight;
+  // anim_canvas.width = 1400;
+  anim_canvas.height = 280;
+}
 
 function generateUUID() {
   let uuid;
@@ -978,13 +981,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
   dropZone.addEventListener("drop", handleDrop, false);
 
+  let mouseMoveTimeout;
+
   anim_canvas.addEventListener("mousemove", (e) => {
+    clearTimeout(mouseMoveTimeout);
+    mouseMoveTimeout = setTimeout(() => {
+      useSimulatedMouse = true;
+    }, 2000);
     useSimulatedMouse = false;
     userMouseX = e.offsetX;
     userMouseY = e.offsetY;
   });
 
   anim_canvas.addEventListener("mouseleave", () => {
+    clearTimeout(mouseMoveTimeout);
     useSimulatedMouse = true;
   });
 });
@@ -1004,6 +1014,7 @@ function throttle(func, limit) {
 
 window.onresize = throttle(function () {
   resizeTextarea();
+  updateAnimationSize();
 }, 100);
 
 function resetTextarea() {
