@@ -216,7 +216,6 @@ function updateHistory(
   error = false,
 ) {
   let history = getHistory();
-  // Add or update the entry as per your existing logic
   if (
     updateLast &&
     history.length > 0 &&
@@ -227,19 +226,27 @@ function updateHistory(
       history[history.length - 1].error = true;
     }
     if (image) {
-      // If updating the last entry, add or update the image link
       history[history.length - 1].image = image;
     }
   } else {
     const newEntry = { role: role, parts: parts, error: error };
     if (image) {
-      // Add the image link to the new entry
       newEntry.image = image;
     }
     history.push(newEntry);
   }
 
-  // Continue with your existing logic to save the updated history
+
+  if (!currentConversationUUID) {
+    currentConversationUUID = generateUUID();
+    console.log("haaaaaaaaaaaa");
+    window.history.pushState(null, null, `/c/${currentConversationUUID}`);
+  }
+
+  if (isNewConversation) {
+    window.history.pushState(null, null, `/c/${currentConversationUUID}`);
+    // isNewConversation = false;
+  }
   localStorage.setItem(currentConversationUUID, JSON.stringify(history));
 }
 
