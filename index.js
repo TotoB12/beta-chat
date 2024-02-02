@@ -13,7 +13,6 @@ const {
 } = require("@google/generative-ai");
 const { v4: uuidv4 } = require('uuid');
 const connectionStates = new Map();
-let connectionCounter = 0;
 
 const app = express();
 const server = http.createServer(app);
@@ -90,14 +89,18 @@ app.post("/api", async (req, res) => {
   }
 });
 
-app.post('/generate-image', async (req, res) => {
+app.post("/generate-image", async (req, res) => {
   const { prompt } = req.body;
+  if (!prompt) {
+    return res.status(400).json({ error: "Prompt is required" });
+  }
+
   try {
-    const imageData = await generateImageFromPrompt(prompt);
-    const imageUrl = await uploadImageToImgur(imageData.b64_json);
-    res.json({ imageUrl });
+    const imageData = await generateImage(prompt);
+    const image = await uploadImageToImgur(imageData.b64_json);
+    res.json({ image });
   } catch (error) {
-    console.error('Error generating image:', error);
+    console.error("Failed to generate image:", error);
     res.status(500).json({ error: "Error generating image" });
   }
 });
@@ -163,15 +166,6 @@ wss.on("connection", function connection(ws) {
         }
         ws.send(JSON.stringify({ type: "AI_RESPONSE", uuid: conversationUUID, text: chunk.text() }));
       }
-
-      // let imageResponse = await generateImage("a cute dog");
-      // if (imageResponse.b64_json) {
-      //   let generatedImageLink = await uploadImageToImgur(imageResponse.b64_json);
-      //   if (generatedImageLink) {
-      //     let generatedImageFormated = `![Generated Image](${generatedImageLink})`;
-      //     ws.send(JSON.stringify({ type: "AI_RESPONSE", uuid: conversationUUID, text: generatedImageFormated }));
-      //   }
-      // }
 
       connectionStates.set(connectionId, { continueStreaming: true });
       ws.send(JSON.stringify({ type: "AI_COMPLETE", uuid: conversationUUID, uniqueIdentifier: "7777" }));
@@ -241,8 +235,8 @@ async function uploadImageToImgur(imageData) {
     request(options, function (error, response) {
       if (error) reject(error);
       let responseBody = JSON.parse(response.body);
-      let imageLink = responseBody.data.link;
-      resolve(imageLink);
+      let responseData = responseBody.data;
+      resolve(responseData);
     });
   });
 }
