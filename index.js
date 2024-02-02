@@ -97,13 +97,13 @@ app.post("/generate-image", async (req, res) => {
 
   try {
     const imageData = await generateImage(prompt);
-    const image = await uploadImageToImgur(imageData.b64_json);
-    res.json(image);
+    res.json({ imageData: imageData.b64_json });
   } catch (error) {
     console.error("Failed to generate image:", error);
     res.status(500).json({ error: "Error generating image" });
   }
 });
+
 
 app.use((req, res, next) => {
   res.redirect("/");

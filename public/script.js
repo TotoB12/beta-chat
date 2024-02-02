@@ -517,7 +517,6 @@ function deleteAllConversations() {
     const keysToDelete = [];
     const conversationElements = document.querySelectorAll(".conversation");
 
-    // Apply the slide-away animation to each conversation
     conversationElements.forEach((element) => {
       element.classList.add("slide-away");
       keysToDelete.push(element.dataset.uuid);
@@ -775,19 +774,20 @@ function generateAndDisplayImage(prompt) {
     body: JSON.stringify({ prompt }),
   })
     .then((response) => response.json())
-    .then((image) => {
-      console.log(image);
-      if (image && image.link) {
+    .then((data) => {
+      if (data && data.imageData) {
         const loadingIndicator = document.querySelector(".image-loading");
         if (loadingIndicator) {
           loadingIndicator.remove();
         }
 
-        updateHistoryWithImage(image);
+        const imageBlob = base64ToBlob(data.imageData);
+        const tempImageUrl = URL.createObjectURL(imageBlob);
+        const imageElement = displayImage(tempImageUrl, true);
+        uploadAIGeneratedImageToImgur(imageBlob, imageElement);
 
-        displayImage(image.link);
       } else {
-        throw new Error("Image URL not found");
+        throw new Error("Image data not found");
       }
     })
     .catch((error) => {
@@ -796,6 +796,55 @@ function generateAndDisplayImage(prompt) {
       if (loadingIndicator) {
         loadingIndicator.textContent = "Failed to load image.";
       }
+    });
+}
+
+
+function base64ToBlob(base64, mimeType='image/jpeg') {
+  const byteCharacters = atob(base64);
+  const byteArrays = [];
+
+  for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+    const slice = byteCharacters.slice(offset, offset + 512);
+    const byteNumbers = new Array(slice.length);
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    byteArrays.push(byteArray);
+  }
+
+  const blob = new Blob(byteArrays, {type: mimeType});
+  return blob;
+}
+
+function uploadAIGeneratedImageToImgur(imageBlob, imageElementToUpdate) {
+  const fd = new FormData();
+  fd.append("image", imageBlob, "image.jpeg");
+  console.log("Before fetch, image element to update:", imageElementToUpdate);
+
+  fetch("https://api.imgur.com/3/image", {
+    method: "POST",
+    headers: {
+      "Authorization": `Client-ID ${imgurClientId}`
+    },
+    body: fd
+  })
+  .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        console.log("AI Image uploaded to Imgur:", data.data.link);
+        console.log("Before fetch, image element to update:", imageElementToUpdate);
+        if (imageElementToUpdate) {
+          imageElementToUpdate.src = data.data.link;
+          console.log("Before fetch, image element to update:", imageElementToUpdate);
+        }
+      } else {
+        throw new Error("Failed to upload image to Imgur");
+      }
+    })
+    .catch(error => {
+      console.error("Error uploading AI-generated image to Imgur:", error);
     });
 }
 
@@ -903,9 +952,14 @@ function sendMessage() {
   wrapCodeElements();
 }
 
-function displayImage(imageUrl, parentElement = chatBox) {
-  const smallThumbnailUrl = imageUrl.replace(/(\.[\w\d_-]+)$/i, "t$1");
-  const largeThumbnailUrl = imageUrl.replace(/(\.[\w\d_-]+)$/i, "l$1");
+function displayImage(imageUrl, blobUrl = false) {
+    let smallThumbnailUrl = imageUrl;
+    let largeThumbnailUrl = imageUrl;
+  
+  if (blobUrl == false) {
+    smallThumbnailUrl = smallThumbnailUrl.replace(/(\.[\w\d_-]+)$/i, "t$1");
+    largeThumbnailUrl = largeThumbnailUrl.replace(/(\.[\w\d_-]+)$/i, "l$1");
+  }
 
   const imageElement = document.createElement("img");
   imageElement.src = smallThumbnailUrl;
@@ -922,7 +976,8 @@ function displayImage(imageUrl, parentElement = chatBox) {
     modal.classList.add("show-modal");
   });
 
-    parentElement.appendChild(imageElement);
+    chatBox.appendChild(imageElement);
+    return imageElement;
   }
 
 document.getElementById("image-modal").addEventListener("click", function (e) {
