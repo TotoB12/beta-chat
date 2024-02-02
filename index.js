@@ -98,7 +98,7 @@ app.post("/generate-image", async (req, res) => {
   try {
     const imageData = await generateImage(prompt);
     const image = await uploadImageToImgur(imageData.b64_json);
-    res.json({ image });
+    res.json(image);
   } catch (error) {
     console.error("Failed to generate image:", error);
     res.status(500).json({ error: "Error generating image" });
@@ -236,6 +236,7 @@ async function uploadImageToImgur(imageData) {
       if (error) reject(error);
       let responseBody = JSON.parse(response.body);
       let responseData = responseBody.data;
+      // console.log(responseData);
       resolve(responseData);
     });
   });
@@ -315,7 +316,7 @@ async function urlToGenerativePart(
 ) {
   // not that great of a way to do this, but it works
   proxyedImageUrl = imageUrl.replace("i.imgur.com", "imgin.voidnet.tech");
-  console.log(proxyedImageUrl);
+  // console.log(proxyedImageUrl);
   try {
     // console.log(wasBlocked);
     if (wasBlocked === false) {
