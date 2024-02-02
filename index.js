@@ -43,7 +43,7 @@ const generationConfig = {
   // topK: 16,
 };
 const apiGenerationConfig = {
-  temperature: 0,
+  temperature: 0.17,
   // maxOutputTokens: 200,
   // topP: 0.1,
   // topK: 16,
@@ -133,7 +133,7 @@ wss.on("connection", function connection(ws) {
         messageData.image ||
         messageData.history.some(
           (entry) =>
-            entry.image &&
+            entry.image && entry.role === "user" &&
             !wasMessageBlockedByAI(
               messageData.history,
               messageData.history.indexOf(entry),
