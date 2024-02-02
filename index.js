@@ -50,6 +50,13 @@ const apiGenerationConfig = {
   // topK: 16,
 };
 
+const SDXLinvokeUrl = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/0ba5e4c7-4540-4a02-b43a-43980067f4af"
+const SDXLfetchUrlFormat = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/status/"
+const SDXLheaders = {
+  "Authorization": "Bearer " + process.env["SDXL_API_KEY"],
+  "Accept": "application/json",
+}
+
 let hasImage;
 
 app.use(bodyParser.json({ limit: '50mb' }));
@@ -80,6 +87,18 @@ app.post("/api", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error processing your request" });
+  }
+});
+
+app.post('/generate-image', async (req, res) => {
+  const { prompt } = req.body;
+  try {
+    const imageData = await generateImageFromPrompt(prompt);
+    const imageUrl = await uploadImageToImgur(imageData.b64_json);
+    res.json({ imageUrl });
+  } catch (error) {
+    console.error('Error generating image:', error);
+    res.status(500).json({ error: "Error generating image" });
   }
 });
 
@@ -143,10 +162,19 @@ wss.on("connection", function connection(ws) {
           break;
         }
         ws.send(JSON.stringify({ type: "AI_RESPONSE", uuid: conversationUUID, text: chunk.text() }));
-      }  
+      }
 
-    connectionStates.set(connectionId, { continueStreaming: true });
-    ws.send(JSON.stringify({ type: "AI_COMPLETE", uuid: conversationUUID, uniqueIdentifier: "7777" }));
+      // let imageResponse = await generateImage("a cute dog");
+      // if (imageResponse.b64_json) {
+      //   let generatedImageLink = await uploadImageToImgur(imageResponse.b64_json);
+      //   if (generatedImageLink) {
+      //     let generatedImageFormated = `![Generated Image](${generatedImageLink})`;
+      //     ws.send(JSON.stringify({ type: "AI_RESPONSE", uuid: conversationUUID, text: generatedImageFormated }));
+      //   }
+      // }
+
+      connectionStates.set(connectionId, { continueStreaming: true });
+      ws.send(JSON.stringify({ type: "AI_COMPLETE", uuid: conversationUUID, uniqueIdentifier: "7777" }));
     } catch (error) {
       console.error(error);
 
@@ -167,6 +195,57 @@ wss.on("connection", function connection(ws) {
     connectionStates.delete(connectionId);
   });
 });
+
+async function generateImage(prompt, inference_steps = 2) {
+  const payload = {
+    "prompt": prompt,
+    "inference_steps": inference_steps,
+    // "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAEElEQVR4nGK6HcwNCAAA//8DTgE8HuxwEQAAAABJRU5ErkJggg==",
+    "prompt_strength": 0.5,
+    // make the seed a random number
+    "seed": Math.floor(Math.random() * 1000)
+  }
+  let response = await fetch(SDXLinvokeUrl, {
+    method: "post",
+    body: JSON.stringify(payload),
+    headers: { "Content-Type": "application/json", ...SDXLheaders }
+  });
+  while (response.status == 202) {
+    let requestId = response.headers.get("NVCF-REQID")
+    let fetchUrl = SDXLfetchUrlFormat + requestId;
+    response = await fetch(fetchUrl, {
+      method: "get",
+      headers: headers
+    })
+  }
+  if (response.status != 200) {
+    let errBody = await (await response.blob()).text()
+    throw "invocation failed with status " + response.status + " " + errBody
+  }
+  return await response.json();
+}
+
+async function uploadImageToImgur(imageData) {
+  let request = require('request');
+  let options = {
+    'method': 'POST',
+    'url': 'https://api.imgur.com/3/image',
+    'headers': {
+      'Authorization': 'Client-ID 6a8a51f3d7933e1'
+    },
+    formData: {
+      'image': imageData
+    }
+  };
+  return new Promise((resolve, reject) => {
+    request(options, function (error, response) {
+      if (error) reject(error);
+      let responseBody = JSON.parse(response.body);
+      let imageLink = responseBody.data.link;
+      resolve(imageLink);
+    });
+  });
+}
 
 function generateUniqueConnectionUUID() {
   let uuid = uuidv4();
