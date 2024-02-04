@@ -160,10 +160,26 @@ function loadHistory() {
     } else if (entry.role === "model") {
       label.textContent = "TotoB12";
       chatBox.appendChild(label);
-      const div = document.createElement("div");
-      div.className = "message ai-message";
-      div.innerHTML = marked.parse(entry.parts);
-      chatBox.appendChild(div);
+      
+      const match = entry.parts.match(
+        /\{"generateImage": "(.+?)"\}/,
+      );
+      console.log(match);
+      let input = entry.parts
+
+      if (match) {
+        input = entry.parts.replace(match[0], "");
+      } else {
+        input = entry.parts;
+      }
+
+      if (input != "") {
+        const div = document.createElement("div");
+        div.className = "message ai-message";
+        div.innerHTML = marked.parse(input);
+        chatBox.appendChild(div);
+      }
+      
       if (entry.image) {
         displayImage(entry.image.link);
       }
@@ -685,7 +701,6 @@ function startWebSocket() {
           updateHistory(
             "model",
             latestAIMessageElement.fullMessage.trim(),
-
             true,
           );
         }
@@ -718,7 +733,6 @@ function updatePingDisplay(latency) {
   pingStatusElement.innerHTML = `Ping: ${latency} ms`;
 }
 
-// Modify the processAIResponse function to check for the image generation command
 function processAIResponse(message, isError = false) {
   if (!latestAIMessageElement) {
     latestAIMessageElement = document.createElement("div");
@@ -737,22 +751,27 @@ function processAIResponse(message, isError = false) {
   }
   latestAIMessageElement.fullMessage += message;
 
-  // Check for the image generation command in the full response
   if (latestAIMessageElement.fullMessage.includes('{"generateImage":')) {
     const match = latestAIMessageElement.fullMessage.match(
       /\{"generateImage": "(.+?)"\}/,
     );
     if (match && match[1]) {
-      latestAIMessageElement.fullMessage =
-        latestAIMessageElement.fullMessage.replace(match[0], "");
+      console.log(match);
+      latestAIMessageElement.innerHTML = marked.parse(
+        latestAIMessageElement.fullMessage.trim().replace(match[0], ""),      );
       addLoadingIndicator();
       generateAndDisplayImage(match[1]);
+    } else {
+      latestAIMessageElement.innerHTML = marked.parse(
+        latestAIMessageElement.fullMessage.trim(),
+      );
     }
+  } else {
+    latestAIMessageElement.innerHTML = marked.parse(
+      latestAIMessageElement.fullMessage.trim(),
+    );
   }
 
-  latestAIMessageElement.innerHTML = marked.parse(
-    latestAIMessageElement.fullMessage.trim(),
-  );
   chatBox.scrollTop = chatBox.scrollHeight;
   updateChatBoxVisibility();
   wrapCodeElements();
@@ -799,7 +818,6 @@ function generateAndDisplayImage(prompt) {
     });
 }
 
-
 function base64ToBlob(base64, mimeType='image/jpeg') {
   const byteCharacters = atob(base64);
   const byteArrays = [];
@@ -834,11 +852,12 @@ function uploadAIGeneratedImageToImgur(imageBlob, imageElementToUpdate) {
     .then(data => {
       if (data.success) {
         console.log("AI Image uploaded to Imgur:", data.data.link);
-        console.log("Before fetch, image element to update:", imageElementToUpdate);
+        console.log("Before fetch, image element to update:", imageElementToUpdate.src);
         if (imageElementToUpdate) {
           imageElementToUpdate.src = data.data.link;
-          console.log("Before fetch, image element to update:", imageElementToUpdate);
+          console.log("Before fetch, image element to update:", imageElementToUpdate.src);
         }
+        updateHistoryWithImage(data.data);
       } else {
         throw new Error("Failed to upload image to Imgur");
       }
