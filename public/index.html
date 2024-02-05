@@ -61,11 +61,17 @@
         </div>
       </div>
     </div>
+    <div id="reconnect-modal" class="modal" style="display: none; justify-content: center; align-items: center;">
+      <div class="modal-content" style="text-align: center;">
+        <h2>Connection Lost</h2>
+        <p>Please refresh the page to try reconnecting.</p>
+        <button id="refresh-button">Refresh Page</button>
+      </div>
+    </div>
     <div id="chat-container">
       <div id="status-container">
         <span id="connection-status" class="connection-status"
-          >Status: 🟡 Connecting</span
-        >
+          >Status: 🟡 Connecting</span>
         <span id="ping-status" class="ping-status">Ping: -- ms</span>
       </div>
       <div id="image-modal" class="image-modal">

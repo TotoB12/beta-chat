@@ -737,6 +737,13 @@ function startWebSocket() {
   };
 }
 
+function attemptReconnect() {
+  setTimeout(() => {
+    console.log('Attempting to reconnect...');
+    startWebSocket();
+  }, 5000);
+}
+
 function updatePingDisplay(latency) {
   const pingStatusElement = document.getElementById("ping-status");
   pingStatusElement.innerHTML = `Ping: ${latency} ms`;
@@ -801,7 +808,9 @@ function addLoadingIndicator() {
   const loadingIndicator = document.createElement("div");
   loadingIndicator.className = "image-loading";
   loadingIndicator.textContent = "Generating image...";
-  chatBox.appendChild(loadingIndicator);
+  const loadingIndicatorIcon = document.createElement("div");
+  loadingIndicatorIcon.className = "image-loading-icon";
+  chatBox.appendChild(loadingIndicatorIcon);
 }
 
 function generateAndDisplayImage(prompt, image = null) {
@@ -818,8 +827,12 @@ function generateAndDisplayImage(prompt, image = null) {
     .then((data) => {
       if (data && data.imageData) {
         const loadingIndicator = document.querySelector(".image-loading");
+        const loadingIndicatorIcon = document.querySelector(".image-loading-icon");
         if (loadingIndicator) {
           loadingIndicator.remove();
+        }
+        if (loadingIndicatorIcon) {
+          loadingIndicatorIcon.remove();
         }
 
         const imageBlob = base64ToBlob(data.imageData);
