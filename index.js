@@ -52,10 +52,6 @@ const apiGenerationConfig = {
 const SDXLTurboInvokeUrl = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/0ba5e4c7-4540-4a02-b43a-43980067f4af"
 const SDXLInvokeUrl = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/89848fb8-549f-41bb-88cb-95d6597044a4"
 const SDXLfetchUrlFormat = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/status/"
-const SDXLTurboHeaders = {
-  "Authorization": "Bearer " + process.env["SDXL_TURBO_API_KEY"],
-  "Accept": "application/json",
-}
 const SDXLHeaders = {
   "Authorization": "Bearer " + process.env["SDXL_API_KEY"],
   "Accept": "application/json",
@@ -194,8 +190,8 @@ wss.on("connection", function connection(ws) {
   });
 });
 
-async function generateImage(prompt, turbo = false) {
-  const headers = turbo ? SDXLTurboHeaders : SDXLHeaders;
+async function generateImage(prompt, turbo = true, image = null) {
+  const headers = SDXLHeaders;
   const invokeUrl = turbo ? SDXLTurboInvokeUrl : SDXLInvokeUrl;
 
   const payload = turbo ? {

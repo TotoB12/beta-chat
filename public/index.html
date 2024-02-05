@@ -3,19 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="TotoB12 Chat">
-    <link rel="apple-touch-icon" href="/assets/favicon.ico">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="TotoB12 Chat" />
+    <link rel="apple-touch-icon" href="/assets/favicon.ico" />
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
     <title>TotoB12 Chat</title>
     <link rel="stylesheet" href="/style.css" />
-    <link rel="preconnect" hred="https://fonts.gstatic.com"/>
+    <link rel="preconnect" hred="https://fonts.gstatic.com" />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
     />
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link
+      rel="stylesheet"
+      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+    />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   </head>
   <body>
@@ -27,23 +30,37 @@
         <span id="menuButton"></span>
         <span id="menuButton"></span>
         <ul id="menu">
-          <div id="modelSelection">
-          <!-- <li> -->
-<!-- <label class="switch">
-  <input type="checkbox" id="modelToggle">
-  <span class="slider round"></span>
-</label> -->
-          <!-- </li> -->
-          </div>
-          <button id="deleteAllButton" title="Delete All Conversations">
+          <div id="modelSelection"></div>
+          <button id="settingsButton" title="Settings">
+            <span class="material-symbols-outlined">settings</span>
+          </button>
+          <button id="deleteAllButton" title="Delete all conversations">
             <span class="material-symbols-outlined">local_fire_department</span>
           </button>
-          <button id="newChatButton">
+          <button id="newChatButton" title="New conversation">
             <span class="material-symbols-outlined"> edit_square </span>
           </button>
-        </ul>        
+        </ul>
       </div>
     </nav>
+    <div id="settings-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-button material-symbols-outlined">close</span>
+        <h2>TotoB12 Chat Settings</h2>
+        <hr />
+        <div class="settings-item">
+          <span class="setting-name">Image Model:</span>
+          <div class="setting-toggle">
+            <span class="toggle-option">Fast</span>
+            <label class="switch">
+              <input type="checkbox" id="modelToggle" />
+              <span class="slider round"></span>
+            </label>
+            <span class="toggle-option">Best</span>
+          </div>
+        </div>
+      </div>
+    </div>
     <div id="chat-container">
       <div id="status-container">
         <span id="connection-status" class="connection-status"
