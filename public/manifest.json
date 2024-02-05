@@ -1,0 +1,14 @@
+{
+  "name": "TotoB12 Chat",
+  "short_name": "TotoB12",
+  "icons": [
+    {
+      "src": "/assets/favicon.ico",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#000000"
+}
