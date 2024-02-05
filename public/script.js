@@ -16,6 +16,8 @@ const menu = document.getElementById("menu");
 const conversationElements = document.querySelectorAll(".conversation");
 const transparentOverlay = document.getElementById("transparent-overlay");
 let buffer;
+let reconnectionAttempts = 0;
+const maxReconnectionAttempts = 5;
 let latestAIMessageElement = null;
 let uploadedImageUrl = null;
 let uploadedImage = null;
@@ -48,9 +50,9 @@ let pingInterval;
 const imgurClientId = "6a8a51f3d7933e1";
 
 anim_canvas.width = window.innerWidth;
-// anim_canvas.height = window.innerHeight;
+anim_canvas.height = window.innerHeight;
 // anim_canvas.width = 1400;
-anim_canvas.height = 280;
+// anim_canvas.height = 280;
 
 function generateUUID() {
   let uuid;
@@ -665,6 +667,7 @@ function startWebSocket() {
     console.log("WebSocket Connected");
     updateConnectionStatus("online");
     sendPing();
+    reconnectionAttempts = 0;
     sendButton.addEventListener("click", function () {
       if (this.classList.contains("ai-responding") === true) {
         stopAIResponse(currentConversationUUID);
@@ -726,9 +729,10 @@ function startWebSocket() {
     }
   };
 
-  ws.onclose = function () {
-    console.log("WebSocket Disconnected");
-    updateConnectionStatus("offline");
+  ws.onclose = function(event) {
+      console.log("WebSocket Disconnected", event);
+      updateConnectionStatus("offline");
+      attemptReconnect();
   };
 
   ws.onerror = function (error) {
@@ -738,10 +742,25 @@ function startWebSocket() {
 }
 
 function attemptReconnect() {
-  setTimeout(() => {
-    console.log('Attempting to reconnect...');
-    startWebSocket();
-  }, 5000);
+    if (reconnectionAttempts < maxReconnectionAttempts) {
+        setTimeout(() => {
+            console.log('Attempting to reconnect...');
+            startWebSocket();
+            reconnectionAttempts++;
+        }, 2000);
+    } else {
+        displayReconnectModal();
+    }
+}
+
+function displayReconnectModal() {
+    const reconnectModal = document.getElementById("reconnect-modal");
+    if (!reconnectModal) {
+        console.error("Reconnect modal element not found!");
+        return;
+    }
+    reconnectModal.style.display = "block";
+    window.onclick = null;
 }
 
 function updatePingDisplay(latency) {
@@ -1307,6 +1326,8 @@ function throttle(func, limit) {
 
 window.onresize = throttle(function () {
   resizeTextarea();
+  anim_canvas.width = window.innerWidth-4;
+  anim_canvas.height = window.innerHeight-4;
 }, 100);
 
 function resetTextarea() {

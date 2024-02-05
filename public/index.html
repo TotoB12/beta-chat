@@ -22,7 +22,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   </head>
   <body>
-    <div id="transparent-overlay"></div>
     <nav role="navigation">
       <div id="menuToggle">
         <input type="checkbox" />
@@ -43,13 +42,20 @@
         </ul>
       </div>
     </nav>
+    <div id="reconnect-modal" class="modal">
+        <div class="reconnect-modal">
+            <h2>Connection Lost</h2>
+            <p>Attempts to reconnect have failed. Please refresh the page to try again.</p>
+            <button id="refresh-button" onclick="location.reload();">Refresh Page</button>
+        </div>
+    </div>
     <div id="settings-modal" class="modal">
       <div class="modal-content">
         <span class="close-button material-symbols-outlined">close</span>
         <h2>TotoB12 Chat Settings</h2>
         <hr />
         <div class="settings-item">
-          <span class="setting-name">Image Model:</span>
+          <span class="setting-name">Image Model</span>
           <div class="setting-toggle">
             <span class="toggle-option">Fast</span>
             <label class="switch">

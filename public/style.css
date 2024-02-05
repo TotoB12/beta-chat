@@ -540,6 +540,22 @@ body {
     right: 95px;
 }
 
+#settingsButton:hover {
+    animation: spin 5s cubic-bezier(0, 1, 1, 0);
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    /* 40% {
+        transform: rotate(120deg);
+    } */
+    100% {
+        transform: rotate(120deg);
+    }
+}
+
 #deleteAllButton.disabled {
     color: var(--disabled-color);
     cursor: pointer;
@@ -575,6 +591,7 @@ body {
     top: 10px;
     right: 10px;
     gap: 10px;
+    z-index: 100;
 }
 
 .connection-status,
@@ -683,6 +700,8 @@ body {
 }
 
 #welcome-screen #typing-text {
+  position: absolute;
+  top: 10vh;
     text-align: center;
     font-size: 20px;
     color: var(--main-color);
@@ -703,10 +722,9 @@ body {
     }
 }
 
-/* #animation {
-  height: 140px;
-  width: 350px;
-} */
+#animation {
+  position: absolute;
+}
 
 .flex {
     display: flex;
@@ -791,8 +809,20 @@ code.hljs {
   width: 80%;
 }
 
+.reconnect-modal {
+  border-radius: 10px;
+  background-color: var(--background-color);
+  margin: 15% auto;
+  padding: 20px;
+  width: 50%;
+}
+
+.refresh-button {
+  
+}
+
 .close-button {
-  color: #aaa;
+  color: var(--main-color);
   float: right;
   font-size: 28px;
   font-weight: bold;
@@ -800,7 +830,7 @@ code.hljs {
 
 .close-button:hover,
 .close-button:focus {
-  color: black;
+  color: var(--hover-color);
   text-decoration: none;
   cursor: pointer;
 }
