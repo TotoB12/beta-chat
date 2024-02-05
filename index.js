@@ -49,9 +49,14 @@ const apiGenerationConfig = {
   // topK: 16,
 };
 
-const SDXLinvokeUrl = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/0ba5e4c7-4540-4a02-b43a-43980067f4af"
+const SDXLTurboInvokeUrl = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/0ba5e4c7-4540-4a02-b43a-43980067f4af"
+const SDXLInvokeUrl = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/89848fb8-549f-41bb-88cb-95d6597044a4"
 const SDXLfetchUrlFormat = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/status/"
-const SDXLheaders = {
+const SDXLTurboHeaders = {
+  "Authorization": "Bearer " + process.env["SDXL_TURBO_API_KEY"],
+  "Accept": "application/json",
+}
+const SDXLHeaders = {
   "Authorization": "Bearer " + process.env["SDXL_API_KEY"],
   "Accept": "application/json",
 }
@@ -90,20 +95,19 @@ app.post("/api", async (req, res) => {
 });
 
 app.post("/generate-image", async (req, res) => {
-  const { prompt } = req.body;
+  const { prompt, turbo } = req.body;
   if (!prompt) {
     return res.status(400).json({ error: "Prompt is required" });
   }
 
   try {
-    const imageData = await generateImage(prompt);
+    const imageData = await generateImage(prompt, turbo);
     res.json({ imageData: imageData.b64_json });
   } catch (error) {
     console.error("Failed to generate image:", error);
     res.status(500).json({ error: "Error generating image" });
   }
 });
-
 
 app.use((req, res, next) => {
   res.redirect("/");
@@ -190,32 +194,43 @@ wss.on("connection", function connection(ws) {
   });
 });
 
-async function generateImage(prompt, inference_steps = 2) {
-  const payload = {
+async function generateImage(prompt, turbo = false) {
+  const headers = turbo ? SDXLTurboHeaders : SDXLHeaders;
+  const invokeUrl = turbo ? SDXLTurboInvokeUrl : SDXLInvokeUrl;
+
+  const payload = turbo ? {
     "prompt": prompt,
-    "inference_steps": inference_steps,
-    // "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAEElEQVR4nGK6HcwNCAAA//8DTgE8HuxwEQAAAABJRU5ErkJggg==",
-    "prompt_strength": 0.5,
-    // make the seed a random number
+    "inference_steps": 2,
     "seed": Math.floor(Math.random() * 1000)
-  }
-  let response = await fetch(SDXLinvokeUrl, {
+  } : {
+    "prompt": prompt,
+    "negative_prompt": "ugly",
+    "sampler": "DDIM",
+    "seed": Math.floor(Math.random() * 1000),
+    "unconditional_guidance_scale": 5,
+    "inference_steps": 50
+  };
+
+  let response = await fetch(invokeUrl, {
     method: "post",
     body: JSON.stringify(payload),
-    headers: { "Content-Type": "application/json", ...SDXLheaders }
+    headers: { "Content-Type": "application/json", ...headers }
   });
+
   while (response.status == 202) {
-    let requestId = response.headers.get("NVCF-REQID")
+    let requestId = response.headers.get("NVCF-REQID");
     let fetchUrl = SDXLfetchUrlFormat + requestId;
     response = await fetch(fetchUrl, {
       method: "get",
       headers: headers
-    })
+    });
   }
+
   if (response.status != 200) {
-    let errBody = await (await response.blob()).text()
-    throw "invocation failed with status " + response.status + " " + errBody
+    let errBody = await (await response.blob()).text();
+    throw "Invocation failed with status " + response.status + " " + errBody;
   }
+
   return await response.json();
 }
 

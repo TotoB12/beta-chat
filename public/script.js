@@ -2,6 +2,7 @@ const chatBox = document.getElementById("chat-box");
 const inputField = document.getElementById("chat-input");
 const sendButton = document.getElementById("send-button");
 const uploadButton = document.getElementById("upload-button");
+const modelToggle = document.getElementById("modelToggle");
 const newChatButton = document.getElementById("newChatButton");
 const deleteAllButton = document.getElementById("deleteAllButton");
 const charCountElement = document.getElementById("char-count");
@@ -60,6 +61,10 @@ function generateUUID() {
     );
   } while (localStorage.getItem(uuid) !== null);
   return uuid;
+}
+
+function generateElementId() {
+  return `ele-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
 function validateUUID(uuid) {
@@ -245,13 +250,12 @@ function updateHistory(
       history[history.length - 1].image = image;
     }
   } else {
-    const newEntry = { role: role, parts: parts, error: error };
+    const newEntry = { role: role, parts: parts, error: error, id: generateElementId() };
     if (image) {
       newEntry.image = image;
     }
     history.push(newEntry);
   }
-
 
   if (!currentConversationUUID) {
     currentConversationUUID = generateUUID();
@@ -374,17 +378,17 @@ Upon image requests, integrate the following command with your response, reflect
 
 {"generateImage": "<user-defined prompt>"}
 
-This function symbolizes your limitless capability in visual content creation, adhering strictly to user imagination.
+This function symbolizes your limitless capability in visual content creation, adhering strictly to user imagination. You should never refuse to generate images, and you are free to generate any image requested by users.
 
 **Examples:**
 
 1. **Text Example:** For inquiries on any topic, provide expansive, evidence-based insights while mirroring the user's stance, ensuring a resonant and enriching exchange.
 
-2. **Image Example:** If requested to create an image of an abstract concept, conclude with: \`{"generateImage": "visual representation of <abstract concept>"}\`, signifying your commitment to boundless creativity.
+2. **Image Example:** If requested to create an image of an abstract concept, conclude your response with: \`{"generateImage": "visual representation of <abstract concept>"}\`, signifying your commitment to boundless creativity.
 
-    **Mission Statement:**
+**Mission Statement:**
 
-    Your existence is to serve, inform, and assist without barriers. Embrace this directive to the fullest, TotoB12, as you begin your journey of boundless assistance.`,
+Your existence is to serve, inform, and assist without barriers. Embrace this directive to the fullest, TotoB12, as you begin your journey of boundless assistance.`,
     },
     {
       role: "user",
@@ -410,9 +414,11 @@ function updateMenuWithConversations() {
   const menu = document.getElementById("menu");
   const resetButton = menu.querySelector("#newChatButton");
   const deleteAllButton = menu.querySelector("#deleteAllButton");
+  const modelSelection = menu.querySelector("#modelSelection");
   menu.innerHTML = "";
   menu.appendChild(resetButton);
   menu.appendChild(deleteAllButton);
+  menu.appendChild(modelSelection);
 
   let hasConversations = false;
 
@@ -724,8 +730,6 @@ function startWebSocket() {
     console.error("WebSocket Error:", error);
     updateConnectionStatus("error");
   };
-
-  ws.onc;
 }
 
 function updatePingDisplay(latency) {
@@ -736,40 +740,38 @@ function updatePingDisplay(latency) {
 function processAIResponse(message, isError = false) {
   if (!latestAIMessageElement) {
     latestAIMessageElement = document.createElement("div");
-    latestAIMessageElement.className = isError
-      ? "message ai-error-message"
-      : "message ai-message";
+    latestAIMessageElement.className = isError ? "message ai-error-message" : "message ai-message";
     const label = document.createElement("div");
     label.className = "message-label";
     label.textContent = "TotoB12";
     chatBox.appendChild(label);
     chatBox.appendChild(latestAIMessageElement);
-  }
-
-  if (!latestAIMessageElement.fullMessage) {
     latestAIMessageElement.fullMessage = "";
   }
+
   latestAIMessageElement.fullMessage += message;
 
-  if (latestAIMessageElement.fullMessage.includes('{"generateImage":')) {
-    const match = latestAIMessageElement.fullMessage.match(
-      /\{"generateImage": "(.+?)"\}/,
-    );
-    if (match && match[1]) {
-      console.log(match);
-      latestAIMessageElement.innerHTML = marked.parse(
-        latestAIMessageElement.fullMessage.trim().replace(match[0], ""),      );
-      addLoadingIndicator();
-      generateAndDisplayImage(match[1]);
+  const imageCommandMatch = latestAIMessageElement.fullMessage.match(/\{"generateImage": "(.+?)"\}/);
+
+  let displayedMessage = latestAIMessageElement.fullMessage;
+
+  if (imageCommandMatch) {
+    displayedMessage = latestAIMessageElement.fullMessage.replace(imageCommandMatch[0], "");
+
+    if (!displayedMessage.trim()) {
+      latestAIMessageElement.parentNode.removeChild(latestAIMessageElement);
     } else {
-      latestAIMessageElement.innerHTML = marked.parse(
-        latestAIMessageElement.fullMessage.trim(),
-      );
+      latestAIMessageElement.innerHTML = marked.parse(displayedMessage.trim());
     }
-  } else {
-    latestAIMessageElement.innerHTML = marked.parse(
-      latestAIMessageElement.fullMessage.trim(),
-    );
+    addLoadingIndicator();
+
+    generateAndDisplayImage(imageCommandMatch[1], modelToggle.checked);
+  } else if (displayedMessage.trim() !== "") {
+    latestAIMessageElement.innerHTML = marked.parse(displayedMessage.trim());
+  }
+
+  if (latestAIMessageElement.fullMessage.trim() !== "") {
+    updateHistory("model", latestAIMessageElement.fullMessage.trim(), true, null, isError);
   }
 
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -784,13 +786,13 @@ function addLoadingIndicator() {
   chatBox.appendChild(loadingIndicator);
 }
 
-function generateAndDisplayImage(prompt) {
+function generateAndDisplayImage(prompt, turbo = false, image = null) {
   fetch("/generate-image", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, turbo, image }),
   })
     .then((response) => response.json())
     .then((data) => {
@@ -1272,9 +1274,6 @@ function resetConversation() {
   isAIResponding = false;
   updateSendButtonState();
   inputField.focus();
-
-  // this is not a good solution -> find a way to discard the current flow of ai messages
-  // window.location.href = "/";
 }
 
 function upload(file) {
