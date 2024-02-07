@@ -148,12 +148,12 @@ function createUserMessage(entry) {
   label.className = "message-label";
   label.textContent = "You";
   chatBox.appendChild(label);
-  chatBox.innerHTML += `<div class="message user-message">${marked.parse(
-    entry.parts,
-  )}</div>`;
+  chatBox.innerHTML += `<div class="message user-message">${marked.parse(entry.parts)}</div>`;
 
-  if (entry.image) {
-    displayImage(entry.image.link);
+  if (entry.images) {
+    entry.images.forEach(image => {
+      displayImage(image.link);
+    });
   }
 }
 
@@ -167,33 +167,30 @@ function loadHistory() {
 
     if (entry.role === "user") {
       createUserMessage(entry);
-      console.log(entry);
     } else if (entry.role === "model") {
       label.textContent = "TotoB12";
       chatBox.appendChild(label);
 
-      const match = entry.parts.match(/\{"generateImage": "(.+?)"\}/);
-      console.log(match);
       let input = entry.parts;
-
+      const match = input.match(/\{"generateImage": "(.+?)"\}/);
       if (match) {
-        input = entry.parts.replace(match[0], "");
-      } else {
-        input = entry.parts;
+        input = input.replace(match[0], "");
       }
 
-      if (input != "") {
+      if (input.trim() !== "") {
         const div = document.createElement("div");
         div.className = "message ai-message";
         div.innerHTML = marked.parse(input);
         chatBox.appendChild(div);
       }
 
-      if (entry.image) {
-        displayImage(entry.image.link);
+      if (entry.images && entry.images.length) {
+        entry.images.forEach(image => {
+          displayImage(image.link);
+        });
       }
     } else if (entry.role === "system") {
-      // system message
+      // system messages
     }
   }
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -237,7 +234,7 @@ function updateHistory(
   role,
   parts,
   updateLast = false,
-  image = null,
+  images = [],
   error = false,
 ) {
   let history = getHistory();
@@ -250,8 +247,8 @@ function updateHistory(
     if (error) {
       history[history.length - 1].error = true;
     }
-    if (image) {
-      history[history.length - 1].image = image;
+    if (images.length) {
+      history[history.length - 1].images = images;
     }
   } else {
     const newEntry = {
@@ -259,10 +256,8 @@ function updateHistory(
       parts: parts,
       error: error,
       id: generateElementId(),
+      images: images,
     };
-    if (image) {
-      newEntry.image = image;
-    }
     history.push(newEntry);
   }
 
@@ -511,8 +506,12 @@ function deleteConversation(uuid) {
     const conversation = JSON.parse(localStorage.getItem(uuid));
     if (conversation) {
       conversation.forEach((entry) => {
-        if (entry.image && entry.image.deletehash) {
-          deleteImageFromImgur(entry.image.deletehash);
+        if (entry.images) {
+          entry.images.forEach((image) => {
+            if (image.deletehash) {
+              deleteImageFromImgur(image.deletehash);
+            }
+          });
         }
       });
     }
@@ -558,8 +557,12 @@ function deleteAllConversations() {
         const conversation = JSON.parse(localStorage.getItem(uuid));
         if (conversation) {
           conversation.forEach((entry) => {
-            if (entry.image && entry.image.deletehash) {
-              deleteImageFromImgur(entry.image.deletehash);
+            if (entry.images) {
+              entry.images.forEach((image) => {
+                if (image.deletehash) {
+                  deleteImageFromImgur(image.deletehash);
+                }
+              });
             }
           });
         }
@@ -909,14 +912,15 @@ function uploadAIGeneratedImageToImgur(imageBlob, imageElementToUpdate) {
           "Before fetch, image element to update:",
           imageElementToUpdate.src,
         );
-        if (imageElementToUpdate) {
-          imageElementToUpdate.src = data.data.link;
-          console.log(
-            "Before fetch, image element to update:",
-            imageElementToUpdate.src,
-          );
-        }
-        updateHistoryWithImage(data.data);
+        updateHistoryWithImage([data.data]);
+        // if (imageElementToUpdate) {
+        //   imageElementToUpdate.src = data.data.link;
+        //   console.log(
+        //     "Before fetch, image element to update:",
+        //     imageElementToUpdate.src,
+        //   );
+        // }
+        // updateHistoryWithImage(data.data);
       } else {
         throw new Error("Failed to upload image to Imgur");
       }
@@ -926,26 +930,23 @@ function uploadAIGeneratedImageToImgur(imageBlob, imageElementToUpdate) {
     });
 }
 
-function updateHistoryWithImage(image) {
-  let history = getHistory();
-  const lastAIMessageIndex = history
-    .slice()
-    .reverse()
-    .findIndex((entry) => entry.role === "model");
-  if (lastAIMessageIndex !== -1) {
-    const correctIndex = history.length - 1 - lastAIMessageIndex;
-    if (!history[correctIndex].image) {
-      history[correctIndex].image = image;
-      localStorage.setItem(currentConversationUUID, JSON.stringify(history));
+function updateHistoryWithImage(imageInfo) {
+  let newImages = Array.isArray(imageInfo) ? imageInfo : [imageInfo];
 
-      const aiMessages = chatBox.querySelectorAll(".ai-message");
-      if (aiMessages.length > 0) {
-        const lastAIMessage = aiMessages[aiMessages.length - 1];
-        // displayImage(image.link, lastAIMessage);
-      }
+  let history = getHistory();
+  if (history.length > 0) {
+    let lastEntry = history[history.length - 1];
+
+    if (!lastEntry.images) {
+      lastEntry.images = [];
     }
+
+    lastEntry.images = lastEntry.images.concat(newImages);
+
+    localStorage.setItem(currentConversationUUID, JSON.stringify(history));
   }
 }
+
 
 function stopAIResponse(uuid) {
   if (ws && ws.readyState === WebSocket.OPEN) {
