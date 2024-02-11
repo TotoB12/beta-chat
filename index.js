@@ -129,16 +129,15 @@ wss.on("connection", function connection(ws) {
       }
 
       // console.log(messageData);
-      hasImage =
-        messageData.image ||
-        messageData.history.some(
-          (entry) =>
-            entry.image && entry.role === "user" &&
-            !wasMessageBlockedByAI(
-              messageData.history,
-              messageData.history.indexOf(entry),
-            ),
-        );
+      hasImage = messageData.images && messageData.images.length > 0 || 
+       messageData.history.some(
+         (entry) => 
+           entry.images && entry.images.length > 0 && entry.role === "user" &&
+           !wasMessageBlockedByAI(
+             messageData.history,
+             messageData.history.indexOf(entry),
+           ),
+       );
 
       const promptParts = await composeMessageForAI(messageData);
       // console.log(promptParts);
@@ -281,8 +280,8 @@ async function composeMessageForAI(messageData) {
     const wasMessageBlocked = wasMessageBlockedByAI(messageData.history, i);
 
     if (wasMessageBlocked) {
-      const placeholder = entry.image
-        ? "\n\nUser: [message and image removed for safety]"
+      const placeholder = entry.images && entry.images.length
+        ? "\n\nUser: [message and images removed for safety]"
         : "\n\nUser: [message removed for safety]";
       parts.push(placeholder);
       consoleOutput += "\n" + placeholder;
@@ -297,10 +296,12 @@ async function composeMessageForAI(messageData) {
     parts.push(textPart);
     consoleOutput += "\n" + textPart;
 
-    if (entry.image && entry.role === "user") {
-      const imagePart = await urlToGenerativePart(entry.image.link);
-      parts.push(imagePart);
-      consoleOutput += "\n[User Image Attached]";
+    if (entry.images && entry.images.length && entry.role === "user") {
+      for (const image of entry.images) {
+        const imagePart = await urlToGenerativePart(image.link);
+        parts.push(imagePart);
+        consoleOutput += "\n[User Image Attached]";
+      }
     }
   }
 
@@ -308,10 +309,12 @@ async function composeMessageForAI(messageData) {
   parts.push(latestUserTextPart);
   consoleOutput += latestUserTextPart;
 
-  if (messageData.image) {
-    const imagePart = await urlToGenerativePart(messageData.image.link);
-    parts.push(imagePart);
-    consoleOutput += "\n[User Image Attached]";
+  if (messageData.images && messageData.images.length) {
+    for (const image of messageData.images) {
+      const imagePart = await urlToGenerativePart(image.link);
+      parts.push(imagePart);
+      consoleOutput += "\n[User Image Attached]";
+    }
   }
 
   parts.push("\n\nTotoB12:");

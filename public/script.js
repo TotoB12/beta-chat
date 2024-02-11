@@ -194,7 +194,7 @@ function loadHistory() {
     }
   }
   chatBox.scrollTop = chatBox.scrollHeight;
-  wrapCodeElements();
+  // wrapCodeElements();
 }
 
 function checkImageInHistory() {
@@ -722,6 +722,7 @@ function startWebSocket() {
             true,
           );
         }
+        wrapCodeElements();
         isAIResponding = false;
         updateSendButtonState();
         return;
@@ -986,32 +987,33 @@ function sendMessage() {
     setTimeout(() => sendButton.classList.remove("shake"), 120);
     return;
   }
-  if (userText === "" || isAIResponding) {
-    displayNotification("Please enter a message.", "error");
+  if (userText === "" && !uploadedImage) {
+    displayNotification("Please enter a message or upload an image.", "error");
     sendButton.classList.add("shake");
     setTimeout(() => sendButton.classList.remove("shake"), 120);
     return;
   }
+
+  let imagesArray = uploadedImage ? [uploadedImage] : [];
 
   const message = {
     type: "user-message",
     uuid: currentConversationUUID,
     history: getHistory(),
     text: userText,
-    image: uploadedImage,
+    images: imagesArray,
   };
 
-  updateHistory("user", userText, false, uploadedImage);
+  updateHistory("user", userText, false, imagesArray);
+
   createUserMessage({
     role: "user",
     parts: userText,
-    error: false,
-    image: uploadedImage,
+    images: imagesArray,
   });
 
   if (!currentConversationUUID) {
     currentConversationUUID = generateUUID();
-    updateHistory("user", userText, false, uploadedImage);
     isNewConversation = true;
   }
 
@@ -1027,10 +1029,13 @@ function sendMessage() {
   latestAIMessageElement = null;
   uploadedImageUrl = null;
   uploadedImage = null;
-  ws.send(JSON.stringify(message));
   isAIResponding = true;
   updateSendButtonState();
   wrapCodeElements();
+
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(message));
+  }
 }
 
 function displayImage(imageUrl, blobUrl = false) {
