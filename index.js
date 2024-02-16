@@ -97,6 +97,7 @@ app.post("/generate-image", async (req, res) => {
   }
 
   try {
+    console.log(turbo);
     const imageData = await generateImage(prompt, turbo);
     res.json({ imageData: imageData.b64_json });
   } catch (error) {
