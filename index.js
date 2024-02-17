@@ -49,9 +49,10 @@ const apiGenerationConfig = {
   // topK: 16,
 };
 
-const SDXLTurboInvokeUrl = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/0ba5e4c7-4540-4a02-b43a-43980067f4af"
 const SDXLInvokeUrl = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/89848fb8-549f-41bb-88cb-95d6597044a4"
 const SDXLfetchUrlFormat = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/status/"
+const SDXLTurboSteps = 10;
+const SDXLSteps = 45
 const SDXLHeaders = {
   "Authorization": "Bearer " + process.env["SDXL_API_KEY"],
   "Accept": "application/json",
@@ -81,8 +82,9 @@ app.post("/api", async (req, res) => {
   }
 
   try {
-    console.log(prompt);
+    // console.log(prompt);
     const response = await getGeminiProResponse(prompt);
+    console.log(response);
     res.json({ response });
   } catch (error) {
     console.error(error);
@@ -192,19 +194,22 @@ wss.on("connection", function connection(ws) {
 
 async function generateImage(prompt, turbo = true, image = null) {
   const headers = SDXLHeaders;
-  const invokeUrl = turbo ? SDXLTurboInvokeUrl : SDXLInvokeUrl;
+  const invokeUrl = SDXLInvokeUrl;
 
   const payload = turbo ? {
     "prompt": prompt,
-    "inference_steps": 2,
-    "seed": Math.floor(Math.random() * 1000)
+    "negative_prompt": "ugly",
+    "sampler": "DPM",
+    "seed": Math.floor(Math.random() * 1000),
+    "guidance_scale": 5,
+    "inference_steps": SDXLTurboSteps,
   } : {
     "prompt": prompt,
     "negative_prompt": "ugly",
-    "sampler": "DDIM",
+    "sampler": "DPM",
     "seed": Math.floor(Math.random() * 1000),
-    "unconditional_guidance_scale": 5,
-    "inference_steps": 50
+    "guidance_scale": 5,
+    "inference_steps": SDXLSteps,
   };
 
   let response = await fetch(invokeUrl, {

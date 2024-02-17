@@ -870,6 +870,10 @@ code.hljs {
   transition: .4s;
 }
 
+.slider .disabled {
+  cursor: pointer;
+}
+
 .switch {
   /* background: #ccc; */
   position: relative;
@@ -931,6 +935,11 @@ input:checked + .slider:before {
   animation: loading-animation 1s infinite linear;
   -webkit-animation: loading-animation 1s infinite linear;
    -moz-animation: loading-animation 1s infinite linear;
+}
+
+.image-loading {
+  color: var(--main-color);
+  font-size: 1.2em;
 }
 
 @keyframes loading-animation {

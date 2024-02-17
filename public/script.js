@@ -1,3 +1,4 @@
+const DEFAULT_MODEL_PREFERENCE = 'Best';
 const chatBox = document.getElementById("chat-box");
 const inputField = document.getElementById("chat-input");
 const sendButton = document.getElementById("send-button");
@@ -831,13 +832,13 @@ function addLoadingIndicator() {
   const loadingIndicator = document.createElement("div");
   loadingIndicator.className = "image-loading";
   loadingIndicator.textContent = "Generating image...";
-  const loadingIndicatorIcon = document.createElement("div");
-  loadingIndicatorIcon.className = "image-loading-icon";
-  chatBox.appendChild(loadingIndicatorIcon);
+  // const loadingIndicatorIcon = document.createElement("div");
+  // loadingIndicatorIcon.className = "image-loading-icon";
+  // chatBox.appendChild(loadingIndicatorIcon);
 }
 
 function generateAndDisplayImage(prompt, image = null) {
-  const modelPreference = localStorage.getItem('modelPreference') || 'Fast';
+  const modelPreference = localStorage.getItem('modelPreference') || DEFAULT_MODEL_PREFERENCE;
   const turbo = modelPreference === 'Fast';
   fetch("/generate-image", {
     method: "POST",
@@ -1279,7 +1280,13 @@ document.addEventListener("DOMContentLoaded", function () {
     useSimulatedMouse = true;
   });
   
+  const modelPreference = localStorage.getItem('modelPreference') || DEFAULT_MODEL_PREFERENCE;
+  localStorage.setItem('modelPreference', modelPreference);
+  const modelToggle = document.getElementById("modelToggle");
   modelToggle.checked = modelPreference === 'Best';
+
+  // modelToggle.disabled = true;
+  // modelToggle.title = "Fast model currently unavailable";
 
   modelToggle.addEventListener('change', function() {
       const modelPreference = modelToggle.checked ? 'Best' : 'Fast';
