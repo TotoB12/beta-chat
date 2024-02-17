@@ -1720,6 +1720,62 @@ function update_anim(t) {
   ctx.strokeStyle = "#FFFFFF";
 }
 
+// let trianglePoints = [
+//     { x: anim_canvas.width / 2, y: anim_canvas.height / 4 },
+//     { x: anim_canvas.width / 4, y: 3 * anim_canvas.height / 4 },
+//     { x: 3 * anim_canvas.width / 4, y: 3 * anim_canvas.height / 4 },
+// ];
+// let currentPointIndex = 0;
+
+// function update_anim(t) {
+//     let target = trianglePoints[currentPointIndex];
+//     if (useSimulatedMouse) {
+//         let dx = target.x - userMouseX;
+//         let dy = target.y - userMouseY;
+//         userMouseX += dx * 0.05;
+//         userMouseY += dy * 0.05;
+
+//         if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+//             currentPointIndex = (currentPointIndex + 1) % trianglePoints.length;
+//         }
+//     } else {
+//         userMouseX = e.offsetX;
+//         userMouseY = e.offsetY;
+//     }
+
+//     ctx.clearRect(0, 0, anim_canvas.width, anim_canvas.height);
+//     anim_trail.forEach((p, pIdx) => {
+//         const prev = pIdx === 0 ? { x: userMouseX, y: userMouseY } : anim_trail[pIdx - 1];
+//         const spring = pIdx === 0 ? 0.4 * anim_params.spring : anim_params.spring;
+//         p.dx += (prev.x - p.x) * spring;
+//         p.dy += (prev.y - p.y) * spring;
+//         p.dx *= anim_params.friction;
+//         p.dy *= anim_params.friction;
+//         p.x += p.dx;
+//         p.y += p.dy;
+//     });
+
+//     ctx.lineCap = "round";
+//     ctx.beginPath();
+//     ctx.moveTo(anim_trail[0].x, anim_trail[0].y);
+
+//     for (let i = 1; i < anim_trail.length - 1; i++) {
+//         const xc = 0.5 * (anim_trail[i].x + anim_trail[i + 1].x);
+//         const yc = 0.5 * (anim_trail[i].y + anim_trail[i + 1].y);
+//         ctx.quadraticCurveTo(anim_trail[i].x, anim_trail[i].y, xc, yc);
+//         ctx.lineWidth = anim_params.widthFactor * (anim_params.pointsNumber - i);
+//         ctx.stroke();
+//     }
+//     ctx.lineTo(
+//         anim_trail[anim_trail.length - 1].x,
+//         anim_trail[anim_trail.length - 1].y,
+//     );
+//     ctx.stroke();
+
+//     window.requestAnimationFrame(update_anim);
+//     ctx.strokeStyle = "#FFFFFF";
+// }
+
 function wrapCodeElements() {
   hljs.highlightAll();
   const codeElements = document.querySelectorAll("code");
