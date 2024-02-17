@@ -1,10 +1,10 @@
-const DEFAULT_MODEL_PREFERENCE = 'Best';
+const DEFAULT_MODEL_PREFERENCE = "Best";
 const chatBox = document.getElementById("chat-box");
 const inputField = document.getElementById("chat-input");
 const sendButton = document.getElementById("send-button");
 const uploadButton = document.getElementById("upload-button");
 const modelToggle = document.getElementById("modelToggle");
-const modelPreference = localStorage.getItem('modelPreference') || 'Fast';
+const modelPreference = localStorage.getItem("modelPreference") || "Fast";
 const newChatButton = document.getElementById("newChatButton");
 const deleteAllButton = document.getElementById("deleteAllButton");
 const settingsButton = document.getElementById("settingsButton");
@@ -149,10 +149,12 @@ function createUserMessage(entry) {
   label.className = "message-label";
   label.textContent = "You";
   chatBox.appendChild(label);
-  chatBox.innerHTML += `<div class="message user-message">${marked.parse(entry.parts)}</div>`;
+  chatBox.innerHTML += `<div class="message user-message">${marked.parse(
+    entry.parts,
+  )}</div>`;
 
   if (entry.images) {
-    entry.images.forEach(image => {
+    entry.images.forEach((image) => {
       displayImage(image.link);
     });
   }
@@ -186,7 +188,7 @@ function loadHistory() {
       }
 
       if (entry.images && entry.images.length) {
-        entry.images.forEach(image => {
+        entry.images.forEach((image) => {
           displayImage(image.link);
         });
       }
@@ -239,6 +241,8 @@ function updateHistory(
   error = false,
 ) {
   let history = getHistory();
+  const timestamp = new Date().getTime(); // Get current timestamp
+
   if (
     updateLast &&
     history.length > 0 &&
@@ -251,6 +255,8 @@ function updateHistory(
     if (images.length) {
       history[history.length - 1].images = images;
     }
+    // Update timestamp
+    history[history.length - 1].timestamp = timestamp;
   } else {
     const newEntry = {
       role: role,
@@ -258,20 +264,16 @@ function updateHistory(
       error: error,
       id: generateElementId(),
       images: images,
+      timestamp: timestamp, // Include timestamp in new entries
     };
     history.push(newEntry);
   }
 
-  if (!currentConversationUUID) {
-    currentConversationUUID = generateUUID();
-    console.log("haaaaaaaaaaaa");
-    window.history.pushState(null, null, `/c/${currentConversationUUID}`);
-  }
-
-  if (isNewConversation) {
-    window.history.pushState(null, null, `/c/${currentConversationUUID}`);
-    // isNewConversation = false;
-  }
+  // Always update the conversation's timestamp in localStorage
+  localStorage.setItem(
+    "timestamp_" + currentConversationUUID,
+    timestamp.toString(),
+  );
   localStorage.setItem(currentConversationUUID, JSON.stringify(history));
 }
 
@@ -425,64 +427,92 @@ function updateMenuWithConversations() {
   menu.appendChild(deleteAllButton);
   menu.appendChild(settingsButton);
 
-  let hasConversations = false;
+  let conversations = [];
 
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key.includes("-")) {
-      hasConversations = true;
-      const conversation = JSON.parse(localStorage.getItem(key));
-      const fourthMessage = conversation[3]?.parts || "New Conversation";
-      const truncatedTitle =
-        fourthMessage.length > 100
-          ? fourthMessage.substring(0, 100) + "..."
-          : fourthMessage;
-
-      const menuItem = document.createElement("li");
-      menuItem.className = "conversation";
-      menuItem.dataset.uuid = key;
-
-      menuItem.addEventListener("click", function () {
-        loadConversation(this.dataset.uuid);
-      });
-
-      const titleContainer = document.createElement("div");
-      titleContainer.className = "menu-title-container";
-      titleContainer.textContent = truncatedTitle;
-
-      const deleteButton = document.createElement("button");
-      deleteButton.innerHTML =
-        '<span class="material-symbols-outlined" style="background: none;">delete</span>';
-      deleteButton.className = "delete-conversation-button";
-      deleteButton.onclick = (e) => {
-        e.stopPropagation();
-        deleteConversation(key);
-      };
-
-      menuItem.appendChild(titleContainer);
-      menuItem.appendChild(deleteButton);
-      menu.appendChild(menuItem);
+    if (key.startsWith('timestamp_')) {
+      const uuid = key.replace('timestamp_', '');
+      const timestamp = parseInt(localStorage.getItem(key), 10);
+      if (!isNaN(timestamp)) {
+        conversations.push({ uuid, timestamp });
+      }
     }
   }
-  if (!hasConversations) {
+
+  conversations.sort((a, b) => b.timestamp - a.timestamp);
+
+  if (conversations.length === 0) {
     const noConversationsMessage = document.createElement("div");
     noConversationsMessage.className = "no-conversations-message";
-    noConversationsMessage.innerHTML = `
-      <p>No conversations available</p>
-      <p>Start chatting now!</p>
-    `;
+    noConversationsMessage.innerHTML = "<p>No conversations available</p><p>Start chatting now!</p>";
     menu.appendChild(noConversationsMessage);
-
-    deleteAllButton.removeEventListener("click", deleteAllConversations);
     deleteAllButton.classList.add("disabled");
   } else {
+    const now = new Date();
+    const today = new Date(now.setHours(0, 0, 0, 0));
+    const yesterday = new Date(today).setDate(today.getDate() - 1);
+    const sevenDaysAgo = new Date(today).setDate(today.getDate() - 7);
+
+    const categories = [
+      { label: "Today", start: today.getTime(), conversations: [] },
+      { label: "Yesterday", start: yesterday, end: today.getTime(), conversations: [] },
+      { label: "Previous 7 Days", start: sevenDaysAgo, end: yesterday, conversations: [] },
+      { label: "Older", end: sevenDaysAgo, conversations: [] },
+    ];
+
+    conversations.forEach(({ uuid, timestamp }) => {
+      const conversationDate = new Date(timestamp);
+      const category = categories.find(cat => {
+        return (!cat.start || conversationDate >= cat.start) && (!cat.end || conversationDate < cat.end);
+      });
+      if (category) {
+        category.conversations.push({ uuid, timestamp });
+      }
+    });
+
+    categories.forEach(category => {
+      if (category.conversations.length > 0) {
+        const header = document.createElement("h4");
+        header.textContent = category.label;
+        menu.appendChild(header);
+
+        category.conversations.forEach(({ uuid }) => {
+          const conversationData = JSON.parse(localStorage.getItem(uuid));
+          const title = conversationData[3]?.parts || "New Conversation";
+          const truncatedTitle = title.length > 100 ? title.substring(0, 100) + "..." : title;
+
+          const menuItem = document.createElement("li");
+          menuItem.className = "conversation";
+          menuItem.dataset.uuid = uuid;
+          menuItem.addEventListener("click", () => loadConversation(uuid));
+
+          const titleContainer = document.createElement("div");
+          titleContainer.className = "menu-title-container";
+          titleContainer.textContent = truncatedTitle;
+
+          const deleteButton = document.createElement("button");
+          deleteButton.innerHTML =
+            '<span class="material-symbols-outlined" style="background: none;">delete</span>';
+          deleteButton.className = "delete-conversation-button";
+          deleteButton.onclick = (e) => {
+            e.stopPropagation();
+            deleteConversation(uuid);
+          };
+
+          menuItem.appendChild(titleContainer);
+          menuItem.appendChild(deleteButton);
+          menu.appendChild(menuItem);
+        });
+      }
+    });
     // const ConversationsMessage = document.createElement("div");
     // ConversationsMessage.className = "conversation-message";
     // ConversationsMessage.innerHTML = `<p>haaaaaaaaaa</p>`;
     // menu.appendChild(ConversationsMessage);
 
-    deleteAllButton.addEventListener("click", deleteAllConversations);
     deleteAllButton.classList.remove("disabled");
+    deleteAllButton.addEventListener("click", deleteAllConversations);
   }
 }
 
@@ -518,10 +548,14 @@ function deleteConversation(uuid) {
     }
 
     localStorage.removeItem(uuid);
+    localStorage.removeItem(`timestamp_${uuid}`);
+
     updateMenuWithConversations();
+
     if (currentConversationUUID === uuid) {
       resetConversation();
     }
+
     if (!checkForConversations() && menuToggleCheckbox.checked) {
       menuToggleCheckbox.click();
     }
@@ -734,10 +768,10 @@ function startWebSocket() {
     }
   };
 
-  ws.onclose = function(event) {
-      console.log("WebSocket Disconnected", event);
-      updateConnectionStatus("offline");
-      attemptReconnect();
+  ws.onclose = function (event) {
+    console.log("WebSocket Disconnected", event);
+    updateConnectionStatus("offline");
+    attemptReconnect();
   };
 
   ws.onerror = function (error) {
@@ -747,25 +781,25 @@ function startWebSocket() {
 }
 
 function attemptReconnect() {
-    if (reconnectionAttempts < maxReconnectionAttempts) {
-        setTimeout(() => {
-            console.log('Attempting to reconnect...');
-            startWebSocket();
-            reconnectionAttempts++;
-        }, 2000);
-    } else {
-        displayReconnectModal();
-    }
+  if (reconnectionAttempts < maxReconnectionAttempts) {
+    setTimeout(() => {
+      console.log("Attempting to reconnect...");
+      startWebSocket();
+      reconnectionAttempts++;
+    }, 2000);
+  } else {
+    displayReconnectModal();
+  }
 }
 
 function displayReconnectModal() {
-    const reconnectModal = document.getElementById("reconnect-modal");
-    if (!reconnectModal) {
-        console.error("Reconnect modal element not found!");
-        return;
-    }
-    reconnectModal.style.display = "block";
-    window.onclick = null;
+  const reconnectModal = document.getElementById("reconnect-modal");
+  if (!reconnectModal) {
+    console.error("Reconnect modal element not found!");
+    return;
+  }
+  reconnectModal.style.display = "block";
+  window.onclick = null;
 }
 
 function updatePingDisplay(latency) {
@@ -838,8 +872,9 @@ function addLoadingIndicator() {
 }
 
 function generateAndDisplayImage(prompt, image = null) {
-  const modelPreference = localStorage.getItem('modelPreference') || DEFAULT_MODEL_PREFERENCE;
-  const turbo = modelPreference === 'Fast';
+  const modelPreference =
+    localStorage.getItem("modelPreference") || DEFAULT_MODEL_PREFERENCE;
+  const turbo = modelPreference === "Fast";
   fetch("/generate-image", {
     method: "POST",
     headers: {
@@ -851,7 +886,9 @@ function generateAndDisplayImage(prompt, image = null) {
     .then((data) => {
       if (data && data.imageData) {
         const loadingIndicator = document.querySelector(".image-loading");
-        const loadingIndicatorIcon = document.querySelector(".image-loading-icon");
+        const loadingIndicatorIcon = document.querySelector(
+          ".image-loading-icon",
+        );
         if (loadingIndicator) {
           loadingIndicator.remove();
         }
@@ -948,7 +985,6 @@ function updateHistoryWithImage(imageInfo) {
     localStorage.setItem(currentConversationUUID, JSON.stringify(history));
   }
 }
-
 
 function stopAIResponse(uuid) {
   if (ws && ws.readyState === WebSocket.OPEN) {
@@ -1279,18 +1315,19 @@ document.addEventListener("DOMContentLoaded", function () {
     clearTimeout(mouseMoveTimeout);
     useSimulatedMouse = true;
   });
-  
-  const modelPreference = localStorage.getItem('modelPreference') || DEFAULT_MODEL_PREFERENCE;
-  localStorage.setItem('modelPreference', modelPreference);
+
+  const modelPreference =
+    localStorage.getItem("modelPreference") || DEFAULT_MODEL_PREFERENCE;
+  localStorage.setItem("modelPreference", modelPreference);
   const modelToggle = document.getElementById("modelToggle");
-  modelToggle.checked = modelPreference === 'Best';
+  modelToggle.checked = modelPreference === "Best";
 
   // modelToggle.disabled = true;
   // modelToggle.title = "Fast model currently unavailable";
 
-  modelToggle.addEventListener('change', function() {
-      const modelPreference = modelToggle.checked ? 'Best' : 'Fast';
-      localStorage.setItem('modelPreference', modelPreference);
+  modelToggle.addEventListener("change", function () {
+    const modelPreference = modelToggle.checked ? "Best" : "Fast";
+    localStorage.setItem("modelPreference", modelPreference);
   });
 
   settingsButton.onclick = function () {
@@ -1314,7 +1351,6 @@ document.addEventListener("DOMContentLoaded", function () {
       menuToggleCheckbox.dispatchEvent(new Event("change"));
       inputField.focus();
     }
-    
   };
 
   document
@@ -1339,8 +1375,8 @@ function throttle(func, limit) {
 
 window.onresize = throttle(function () {
   resizeTextarea();
-  anim_canvas.width = window.innerWidth-4;
-  anim_canvas.height = window.innerHeight-4;
+  anim_canvas.width = window.innerWidth - 4;
+  anim_canvas.height = window.innerHeight - 4;
 }, 100);
 
 function resetTextarea() {
