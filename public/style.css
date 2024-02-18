@@ -962,7 +962,6 @@ input:checked + .slider:before {
   font-size: 1em;
 }
 
-
 @keyframes loading-animation {
     from {
         transform: rotate(0deg);
