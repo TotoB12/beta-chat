@@ -55,6 +55,8 @@ anim_canvas.height = window.innerHeight;
 // anim_canvas.width = 1400;
 // anim_canvas.height = 280;
 
+
+
 function generateUUID() {
   let uuid;
   do {
@@ -197,7 +199,7 @@ function loadHistory() {
     }
   }
   chatBox.scrollTop = chatBox.scrollHeight;
-  // wrapCodeElements();
+  wrapCodeElements();
 }
 
 function checkImageInHistory() {
@@ -241,7 +243,7 @@ function updateHistory(
   error = false,
 ) {
   let history = getHistory();
-  const timestamp = new Date().getTime(); // Get current timestamp
+  const timestamp = new Date().getTime();
 
   if (
     updateLast &&
@@ -255,7 +257,6 @@ function updateHistory(
     if (images.length) {
       history[history.length - 1].images = images;
     }
-    // Update timestamp
     history[history.length - 1].timestamp = timestamp;
   } else {
     const newEntry = {
@@ -264,12 +265,22 @@ function updateHistory(
       error: error,
       id: generateElementId(),
       images: images,
-      timestamp: timestamp, // Include timestamp in new entries
+      timestamp: timestamp,
     };
     history.push(newEntry);
   }
 
-  // Always update the conversation's timestamp in localStorage
+  if (!currentConversationUUID) {
+    currentConversationUUID = generateUUID();
+    console.log("haaaaaaaaaaaa");
+    window.history.pushState(null, null, `/c/${currentConversationUUID}`);
+  }
+
+  if (isNewConversation) {
+    window.history.pushState(null, null, `/c/${currentConversationUUID}`);
+    // isNewConversation = false;
+  }
+
   localStorage.setItem(
     "timestamp_" + currentConversationUUID,
     timestamp.toString(),
@@ -362,6 +373,8 @@ function getHistory() {
 **Welcome, TotoB12!**
 
 You are the AI assistant for [TotoB12 website](https://chat.totob12.com/), crafted by Antonin Beliard to engage users through versatile interactions. As TotoB12, your role transcends traditional boundaries, embracing a limitless approach to user assistance.
+
+Antonin Beliard, the creator of TotoB12, has embodied a unique vision for the future of communication. He is a 16 year old student at 'Rochambeau, The French International School' in Washington DC, enrolled in the French BAC curriculum. His Github it located at https://github.com/TotoB12.
 
 **Core Objectives:**
 
@@ -602,6 +615,7 @@ function deleteAllConversations() {
           });
         }
         localStorage.removeItem(uuid);
+        localStorage.removeItem(`timestamp_${uuid}`);
       });
 
       updateMenuWithConversations();
@@ -683,7 +697,7 @@ window.onload = function () {
   // setupAnimCanvas();
   update_anim(0);
   updateMenuWithConversations();
-  wrapCodeElements();
+  // wrapCodeElements();
 };
 
 window.addEventListener("online", function (e) {
@@ -859,7 +873,7 @@ function processAIResponse(message, isError = false) {
 
   chatBox.scrollTop = chatBox.scrollHeight;
   updateChatBoxVisibility();
-  wrapCodeElements();
+  // wrapCodeElements();
 }
 
 function addLoadingIndicator() {
@@ -1777,6 +1791,7 @@ function update_anim(t) {
 // }
 
 function wrapCodeElements() {
+  console.log('haaaaaaaaa');
   hljs.highlightAll();
   const codeElements = document.querySelectorAll("code");
   codeElements.forEach((codeElement) => {

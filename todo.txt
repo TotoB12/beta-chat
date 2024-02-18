@@ -1,1 +1,7 @@
-reset the conversation when an answer is being generated -> this is not a good solution -> find a way to discard the current flow of ai messages
+code is not being formatted during a long response:
+Element previously highlighted. To highlight again, first unset `dataset.highlighted`. <code class="language-python hljs" data-highlighted="yes">
+
+displayed images not working for old images
+
+register and generate multiple images
+
