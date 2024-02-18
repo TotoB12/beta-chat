@@ -486,7 +486,8 @@ function updateMenuWithConversations() {
 
     categories.forEach(category => {
       if (category.conversations.length > 0) {
-        const header = document.createElement("h4");
+        const header = document.createElement("p");
+        header.className = "conversation-header";
         header.textContent = category.label;
         menu.appendChild(header);
 
@@ -747,7 +748,7 @@ function startWebSocket() {
       ) {
         // console.log("UUID:", data.uuid);
         processAIResponse(data.text);
-        wrapCodeElements();
+        // wrapCodeElements();
       }
 
       if (data.type === "pong") {
@@ -859,6 +860,7 @@ function processAIResponse(message, isError = false) {
     generateAndDisplayImage(imageCommandMatch[1]);
   } else if (displayedMessage.trim() !== "") {
     latestAIMessageElement.innerHTML = marked.parse(displayedMessage.trim());
+    wrapCodeElements();
   }
 
   if (latestAIMessageElement.fullMessage.trim() !== "") {
@@ -877,12 +879,33 @@ function processAIResponse(message, isError = false) {
 }
 
 function addLoadingIndicator() {
+  const bubbleContainer = document.createElement("div");
+  bubbleContainer.className = "loading-bubble";
+
   const loadingIndicator = document.createElement("div");
   loadingIndicator.className = "image-loading";
-  loadingIndicator.textContent = "Generating image...";
-  // const loadingIndicatorIcon = document.createElement("div");
-  // loadingIndicatorIcon.className = "image-loading-icon";
-  // chatBox.appendChild(loadingIndicatorIcon);
+  loadingIndicator.textContent = "Generating image";
+  bubbleContainer.appendChild(loadingIndicator);
+  chatBox.appendChild(bubbleContainer);
+
+  let dots = 0;
+  const maxDots = 3;
+  const updateText = () => {
+    dots = (dots + 1) % (maxDots + 1);
+    loadingIndicator.textContent = "Generating image" + ".".repeat(dots);
+  };
+  const intervalId = setInterval(updateText, 500);
+
+  bubbleContainer.dataset.intervalId = intervalId.toString();
+}
+
+function removeLoadingIndicator() {
+  const bubbleContainer = document.querySelector(".loading-bubble");
+  if (bubbleContainer) {
+    const intervalId = parseInt(bubbleContainer.dataset.intervalId, 10);
+    clearInterval(intervalId);
+    bubbleContainer.remove();
+  }
 }
 
 function generateAndDisplayImage(prompt, image = null) {
@@ -899,16 +922,7 @@ function generateAndDisplayImage(prompt, image = null) {
     .then((response) => response.json())
     .then((data) => {
       if (data && data.imageData) {
-        const loadingIndicator = document.querySelector(".image-loading");
-        const loadingIndicatorIcon = document.querySelector(
-          ".image-loading-icon",
-        );
-        if (loadingIndicator) {
-          loadingIndicator.remove();
-        }
-        if (loadingIndicatorIcon) {
-          loadingIndicatorIcon.remove();
-        }
+        removeLoadingIndicator();
 
         const imageBlob = base64ToBlob(data.imageData);
         const tempImageUrl = URL.createObjectURL(imageBlob);
@@ -1074,6 +1088,10 @@ function sendMessage() {
     isNewConversation = false;
   }
 
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(message));
+  }
+
   inputField.value = "";
   resetTextarea();
   resetUploadButton();
@@ -1083,10 +1101,7 @@ function sendMessage() {
   isAIResponding = true;
   updateSendButtonState();
   wrapCodeElements();
-
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify(message));
-  }
+  updateMenuWithConversations();
 }
 
 function displayImage(imageUrl, blobUrl = false) {
@@ -1791,7 +1806,7 @@ function update_anim(t) {
 // }
 
 function wrapCodeElements() {
-  console.log('haaaaaaaaa');
+  // console.log('haaaaaaaaa');
   hljs.highlightAll();
   const codeElements = document.querySelectorAll("code");
   codeElements.forEach((codeElement) => {

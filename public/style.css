@@ -8,14 +8,23 @@
 }
 
 @font-face {
-    font-family: 'PolySans';
+    font-family: 'PolySans Neutral';
     src: url('/assets/fonts/PolySans-neutral.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'PolySans Bulky';
     src: url('/assets/fonts/PolySans-bulky.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'PolySans Slim';
     src: url('/assets/fonts/PolySans-slim.ttf') format('truetype');
 }
 
 ::-webkit-scrollbar {
     width: 7px;
+    height: 7px;
     /* 10px */
 }
 
@@ -34,7 +43,7 @@
 }
 
 body {
-    font-family: 'PolySans', Arial, sans-serif;
+    font-family: 'PolySans Slim', Arial, sans-serif;
     margin: 0;
     background-color: var(--background-color);
     color: var(--main-color);
@@ -104,7 +113,7 @@ body {
 }
 
 #chat-input {
-    font-family: 'PolySans', Arial, sans-serif;
+    font-family: 'PolySans Slim', Arial, sans-serif;
     resize: none;
     font-size: large;
     flex-grow: 1;
@@ -760,7 +769,7 @@ code.hljs {
 }
 
 .copy-button {
-    font-family: 'PolySans', Arial, sans-serif;
+    font-family: 'PolySans Neutral', Arial, sans-serif;
     cursor: pointer;
     background: none;
     border: none;
@@ -937,10 +946,22 @@ input:checked + .slider:before {
    -moz-animation: loading-animation 1s infinite linear;
 }
 
-.image-loading {
-  color: var(--main-color);
-  font-size: 1.2em;
+.loading-bubble {
+  /* display: inline-block; */
+  width: 20vw;
+  padding: 10px 20px;
+  margin: 20px 0px;
+  background-color: var(--main-color);
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  color: #333;
 }
+
+.image-loading {
+  color: inherit;
+  font-size: 1em;
+}
+
 
 @keyframes loading-animation {
     from {
@@ -949,4 +970,8 @@ input:checked + .slider:before {
     to {
         transform: rotate(360deg);
     }
+}
+
+.conversation-header {
+  font-family: 'PolySans Neutral', Arial, sans-serif;
 }
