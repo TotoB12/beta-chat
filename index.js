@@ -201,14 +201,16 @@ async function generateImage(prompt, turbo = true, image = null) {
 
   const payload = turbo ? {
     "prompt": prompt,
-    "negative_prompt": "ugly",
+    // "negative_prompt": "ugly",
+    "negative_prompt": "(bad quality, low resolution, poorly drawn, tiling, out of focus, overexposed, underexposed, bad art, beginner, amateur, distorted face, poorly drawn hands, poorly drawn feet, disfigured, body out of frame)",
     "sampler": "DPM",
     "seed": Math.floor(Math.random() * 1000),
     "guidance_scale": 5,
     "inference_steps": SDXLTurboSteps,
   } : {
     "prompt": prompt,
-    "negative_prompt": "ugly",
+    // "negative_prompt": "ugly",
+    "negative_prompt": "(bad quality, low resolution, poorly drawn, tiling, out of focus, overexposed, underexposed, bad art, beginner, amateur, distorted face, poorly drawn hands, poorly drawn feet, disfigured, body out of frame)",
     "sampler": "DPM",
     "seed": Math.floor(Math.random() * 1000),
     "guidance_scale": 5,

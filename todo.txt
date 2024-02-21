@@ -1,6 +1,3 @@
-code is not being formatted during a long response:
-Element previously highlighted. To highlight again, first unset `dataset.highlighted`. <code class="language-python hljs" data-highlighted="yes">
-
 displayed images not working for old images
 
 register and generate multiple images
