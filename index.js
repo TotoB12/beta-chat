@@ -52,7 +52,7 @@ const apiGenerationConfig = {
 const SDXLInvokeUrl = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/89848fb8-549f-41bb-88cb-95d6597044a4"
 const SDXLfetchUrlFormat = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/status/"
 const SDXLTurboSteps = 10;
-const SDXLSteps = 45
+const SDXLSteps = 25
 const SDXLHeaders = {
   "Authorization": "Bearer " + process.env["SDXL_API_KEY"],
   "Accept": "application/json",
