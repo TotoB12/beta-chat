@@ -148,6 +148,9 @@ wss.on("connection", function connection(ws) {
       const prompt = promptParts.join("");
       console.log(prompt);
 
+      //print out the models
+      // console.log(genAI.ListModels)
+
       const model = hasImage
         ? genAI.getGenerativeModel({
           model: "gemini-pro-vision",
@@ -156,7 +159,7 @@ wss.on("connection", function connection(ws) {
           stopSequences: ["TotoB12:"],
         })
         : genAI.getGenerativeModel({
-          model: "gemini-pro",
+          model: "gemini-1.0-pro-latest",
           safetySettings,
           generationConfig,
           stopSequences: ["TotoB12:"],
