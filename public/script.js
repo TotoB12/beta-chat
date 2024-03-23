@@ -1,4 +1,4 @@
-const DEFAULT_MODEL_PREFERENCE = "Best";
+const DEFAULT_MODEL_PREFERENCE = "Fast";
 const chatBox = document.getElementById("chat-box");
 const inputField = document.getElementById("chat-input");
 const sendButton = document.getElementById("send-button");

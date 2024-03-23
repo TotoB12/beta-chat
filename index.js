@@ -1,9 +1,9 @@
-require('dotenv').config();
+require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const http = require("http");
 const fetch = require("node-fetch");
-const cors = require('cors');
+const cors = require("cors");
 const WebSocket = require("ws");
 const bodyParser = require("body-parser");
 const {
@@ -11,7 +11,7 @@ const {
   HarmBlockThreshold,
   HarmCategory,
 } = require("@google/generative-ai");
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 const connectionStates = new Map();
 
 const app = express();
@@ -49,19 +49,21 @@ const apiGenerationConfig = {
   // topK: 16,
 };
 
-const SDXLInvokeUrl = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/functions/89848fb8-549f-41bb-88cb-95d6597044a4"
-const SDXLfetchUrlFormat = "https://api.nvcf.nvidia.com/v2/nvcf/pexec/status/"
-const SDXLTurboSteps = 10;
-const SDXLSteps = 25
+const SDXLInvokeUrl =
+  "https://ai.api.nvidia.com/v1/genai/stabilityai/stable-diffusion-xl";
+const SDXLTurboInvokeUrl =
+  "https://ai.api.nvidia.com/v1/genai/stabilityai/sdxl-turbo";
+const SDXLTurboSteps = 2;
+const SDXLSteps = 25;
 const SDXLHeaders = {
-  "Authorization": "Bearer " + process.env["SDXL_API_KEY"],
-  "Accept": "application/json",
-}
+  Authorization: "Bearer " + process.env["SDXL_API_KEY"],
+  Accept: "application/json",
+};
 
 let hasImage;
 
-app.use(bodyParser.json({ limit: '50mb' }));
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use(express.static("public"));
 app.use(cors());
 
@@ -84,7 +86,7 @@ app.post("/api", async (req, res) => {
   try {
     // console.log(prompt);
     const response = await getGeminiProResponse(prompt);
-    console.log(response);
+    // console.log(response);
     res.json({ response });
   } catch (error) {
     console.error(error);
@@ -99,9 +101,10 @@ app.post("/generate-image", async (req, res) => {
   }
 
   try {
-    console.log(turbo);
+    console.log("turbo: ", turbo);
     const imageData = await generateImage(prompt, turbo);
-    res.json({ imageData: imageData.b64_json });
+    console.log(imageData.artifacts[0].finishReason);
+    res.json({ imageData: imageData.artifacts[0].base64 });
   } catch (error) {
     console.error("Failed to generate image:", error);
     res.status(500).json({ error: "Error generating image" });
@@ -132,51 +135,69 @@ wss.on("connection", function connection(ws) {
       }
 
       // console.log(messageData);
-      hasImage = messageData.images && messageData.images.length > 0 || 
-       messageData.history.some(
-         (entry) => 
-           entry.images && entry.images.length > 0 && entry.role === "user" &&
-           !wasMessageBlockedByAI(
-             messageData.history,
-             messageData.history.indexOf(entry),
-           ),
-       );
+      hasImage =
+        (messageData.images && messageData.images.length > 0) ||
+        messageData.history.some(
+          (entry) =>
+            entry.images &&
+            entry.images.length > 0 &&
+            entry.role === "user" &&
+            !wasMessageBlockedByAI(
+              messageData.history,
+              messageData.history.indexOf(entry),
+            ),
+        );
 
       const promptParts = await composeMessageForAI(messageData);
-      console.log(promptParts);
+      // console.log(promptParts);
       // convert promptParts to text
       const prompt = promptParts.join("");
-      console.log(prompt);
+      // console.log(prompt);
 
       //print out the models
-      console.log(genAI.ListModels)
+      // console.log(genAI.ListModels);
 
       const model = hasImage
         ? genAI.getGenerativeModel({
-          model: "gemini-pro-vision",
-          safetySettings,
-          generationConfig,
-          stopSequences: ["TotoB12:"],
-        })
+            model: "gemini-pro-vision",
+            safetySettings,
+            generationConfig,
+            stopSequences: ["TotoB12:"],
+          })
         : genAI.getGenerativeModel({
-          model: "gemini-1.0-pro",
-          safetySettings,
-          generationConfig,
-          stopSequences: ["TotoB12:"],
-        });
+            model: "gemini-1.0-pro",
+            safetySettings,
+            generationConfig,
+            stopSequences: ["TotoB12:"],
+          });
 
       const result = await model.generateContentStream(promptParts);
 
       for await (const chunk of result.stream) {
         if (!connectionStates.get(connectionId).continueStreaming) {
-          console.log("Stopped streaming AI response for connection:", connectionId);
+          console.log(
+            "Stopped streaming AI response for connection:",
+            connectionId,
+          );
           break;
         }
-        ws.send(JSON.stringify({ type: "AI_RESPONSE", uuid: conversationUUID, text: chunk.text() }));
+        ws.send(
+          JSON.stringify({
+            type: "AI_RESPONSE",
+            uuid: conversationUUID,
+            text: chunk.text(),
+          }),
+        );
       }
 
       connectionStates.set(connectionId, { continueStreaming: true });
-      ws.send(JSON.stringify({ type: "AI_COMPLETE", uuid: conversationUUID, uniqueIdentifier: "7777" }));
+      ws.send(
+        JSON.stringify({
+          type: "AI_COMPLETE",
+          uuid: conversationUUID,
+          uniqueIdentifier: "7777",
+        }),
+      );
     } catch (error) {
       console.error(error);
 
@@ -187,9 +208,19 @@ wss.on("connection", function connection(ws) {
         blockReason = "Error: Unable to process the request.";
       }
 
-      ws.send(JSON.stringify({ type: "error", uuid: conversationUUID, text: blockReason }));
       ws.send(
-        JSON.stringify({ type: "AI_COMPLETE", uuid: conversationUUID, uniqueIdentifier: "7777" }),
+        JSON.stringify({
+          type: "error",
+          uuid: conversationUUID,
+          text: blockReason,
+        }),
+      );
+      ws.send(
+        JSON.stringify({
+          type: "AI_COMPLETE",
+          uuid: conversationUUID,
+          uniqueIdentifier: "7777",
+        }),
       );
     }
   });
@@ -200,60 +231,89 @@ wss.on("connection", function connection(ws) {
 
 async function generateImage(prompt, turbo = true, image = null) {
   const headers = SDXLHeaders;
-  const invokeUrl = SDXLInvokeUrl;
+  const invokeUrl = turbo ? SDXLTurboInvokeUrl : SDXLInvokeUrl;
 
-  const payload = turbo ? {
-    "prompt": prompt,
-    // "negative_prompt": "ugly",
-    "negative_prompt": "(bad quality, low resolution, poorly drawn, tiling, out of focus, overexposed, underexposed, bad art, beginner, amateur, distorted face, poorly drawn hands, poorly drawn feet, disfigured, body out of frame)",
-    "sampler": "DPM",
-    "seed": Math.floor(Math.random() * 1000),
-    "guidance_scale": 5,
-    "inference_steps": SDXLTurboSteps,
-  } : {
-    "prompt": prompt,
-    // "negative_prompt": "ugly",
-    "negative_prompt": "(bad quality, low resolution, poorly drawn, tiling, out of focus, overexposed, underexposed, bad art, beginner, amateur, distorted face, poorly drawn hands, poorly drawn feet, disfigured, body out of frame)",
-    "sampler": "DPM",
-    "seed": Math.floor(Math.random() * 1000),
-    "guidance_scale": 5,
-    "inference_steps": SDXLSteps,
-  };
+  const payload = turbo
+    ? {
+        text_prompts: [
+          {
+            text: prompt,
+            weight: 1,
+          },
+        ],
+        sampler: "K_EULER_ANCESTRAL",
+        steps: SDXLTurboSteps,
+        seed: Math.floor(Math.random() * 1000),
+      }
+    : {
+        text_prompts: [
+          {
+            text: prompt,
+            weight: 1,
+          },
+          {
+            text: "",
+            weight: -1,
+          },
+        ],
+        sampler: "K_DPM_2_ANCESTRAL",
+        steps: SDXLSteps,
+        cfg_scale: 5,
+        seed: Math.floor(Math.random() * 1000),
+      };
 
   let response = await fetch(invokeUrl, {
     method: "post",
     body: JSON.stringify(payload),
-    headers: { "Content-Type": "application/json", ...headers }
+    headers: { "Content-Type": "application/json", ...headers },
   });
 
-  while (response.status == 202) {
-    let requestId = response.headers.get("NVCF-REQID");
-    let fetchUrl = SDXLfetchUrlFormat + requestId;
-    response = await fetch(fetchUrl, {
-      method: "get",
-      headers: headers
-    });
-  }
+  // while (response.status == 202) {
+  //   let requestId = response.headers.get("NVCF-REQID");
+  //   let fetchUrl = SDXLfetchUrlFormat + requestId;
+  //   response = await fetch(fetchUrl, {
+  //     method: "get",
+  //     headers: headers
+  //   });
+  // }
 
-  if (response.status != 200) {
-    let errBody = await (await response.blob()).text();
-    throw "Invocation failed with status " + response.status + " " + errBody;
-  }
+  // if (response.status != 200) {
+  //   let errBody = await (await response.blob()).text();
+  //   throw "Invocation failed with status " + response.status + " " + errBody;
+  // }
 
-  return await response.json();
+  //   const generation = await response.json();
+  //   console.log(response);
+
+  //   return generation
+  // }
+
+  let generation;
+  if (response.ok) {
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      generation = await response.json();
+    } else {
+      const text = await response.text();
+      generation = JSON.parse(text);
+    }
+  } else {
+    throw new Error("Failed to fetch image generation data");
+  }
+  return generation;
 }
 
 async function uploadImageToImgur(imageData) {
-  let request = require('request');
+  let request = require("request");
   let options = {
-    'method': 'POST',
-    'url': 'https://api.imgur.com/3/image',
-    'headers': {
-      'Authorization': 'Client-ID 6a8a51f3d7933e1'
+    method: "POST",
+    url: "https://api.imgur.com/3/image",
+    headers: {
+      Authorization: "Client-ID 6a8a51f3d7933e1",
     },
     formData: {
-      'image': imageData
-    }
+      image: imageData,
+    },
   };
   return new Promise((resolve, reject) => {
     request(options, function (error, response) {
@@ -294,9 +354,10 @@ async function composeMessageForAI(messageData) {
     const wasMessageBlocked = wasMessageBlockedByAI(messageData.history, i);
 
     if (wasMessageBlocked) {
-      const placeholder = entry.images && entry.images.length
-        ? "\n\nUser: [message and images removed for safety]"
-        : "\n\nUser: [message removed for safety]";
+      const placeholder =
+        entry.images && entry.images.length
+          ? "\n\nUser: [message and images removed for safety]"
+          : "\n\nUser: [message removed for safety]";
       parts.push(placeholder);
       consoleOutput += "\n" + placeholder;
       continue;
