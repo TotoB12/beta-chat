@@ -150,7 +150,6 @@ wss.on("connection", function connection(ws) {
 
       const promptParts = await composeMessageForAI(messageData);
       // console.log(promptParts);
-      // convert promptParts to text
       const prompt = promptParts.join("");
       // console.log(prompt);
 
@@ -171,7 +170,7 @@ wss.on("connection", function connection(ws) {
             stopSequences: ["TotoB12:"],
           });
 
-      const result = await model.generateContentStream(promptParts);
+      const result = await model.generateContentStream(promptParts); // promptParts?
 
       for await (const chunk of result.stream) {
         if (!connectionStates.get(connectionId).continueStreaming) {
